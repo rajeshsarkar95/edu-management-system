@@ -12,6 +12,7 @@ type Address = {
   state:string
   pincode:string
 }
+
 type Guardian = {
   name: string
   relation: string
@@ -62,7 +63,7 @@ type ApiResponse = {
   data: Student[]
 }
 
-type ClassOption ={
+type ClassOption = {
   _id:string
   name:string
 }
@@ -79,8 +80,7 @@ const STATUS_OPTIONS = ['active','inactive','transferred','graduated'] as const;
 const EMPTY_ADDRESS:Address = {street:'',city:'',state:'',pincode:''}
 
 const EMPTY_GUARDIAN:Guardian = {
-  name:'',relation:'Father',phone:'',email:'',occupation:'',annualIncome:0};
-
+name:'',relation:'Father',phone:'',email:'',occupation:'',annualIncome:0};
 const initForm = {
   studentNumber:'',
   name:'',
@@ -107,7 +107,7 @@ type FormState = typeof initForm
 
 const feeColor = (f:string)=>
   f === 'paid' ? 'success' : f === 'overdue' ? 'danger' : 'warning'
-const statusColor = (s:string) =>
+const statusColor = (s:string)=>
   s === 'active' ? 'success' : s === 'graduated' ? 'info' : s === 'transferred' ? 'warning' : 'danger'
 const formatDate = (iso:string) =>{
   if (!iso) return '—'
@@ -258,13 +258,13 @@ export default function StudentsPage(){
       setSaving(false)
     }
   }
-  const handleDelete = async (id: string)=>{
+  const handleDelete = async (id:string)=>{
     if (!confirm('Delete this student?')) return;
     try {
-      const res = await fetch(`${BASE_URL}/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${BASE_URL}/${id}`,{method:'DELETE'});
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      setStudents(prev => prev.filter(s => s._id !== id));
-    } catch (err: unknown) {
+      setStudents(prev => prev.filter(s =>s._id !== id));
+    } catch (err: unknown){
       alert(err instanceof Error ? err.message : 'Delete failed');
     }
   }
@@ -357,19 +357,19 @@ export default function StudentsPage(){
                 <tr>
                   <th>#</th>
                   <th>Student</th>
-                  <th>Stu No</th>
-                  {/* <th>Roll No</th> */}
+                  <th>Pen No</th>
+                   <th>Roll No</th> 
                   <th>Adm No</th>
                   <th>Class</th>
-                  <th>Guardian</th>
+                  <th>Session</th>
+                  <th>Name</th>
                   <th>Phone</th>
-                  <th>Fee</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((s, i) => (
+                {filtered.map((s,i) =>(
                   <tr key={s._id}>
                     <td style={{ color: '#94a3b8', fontSize: 12 }}>{i + 1}</td>
                     <td>
@@ -391,7 +391,7 @@ export default function StudentsPage(){
                       </code>
                     </td>
                     <td>
-                      <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>
+                      <code style={{background:'#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>
                         {s.rollNumber}
                       </code>
                     </td>

@@ -6,28 +6,24 @@ import { Plus, X, Trash2, Bell } from 'lucide-react'
 
 const initForm = { title: '', content: '', priority: 'medium', target: 'All', sms: false }
 
-export default function NoticesPage() {
+export default function NoticesPage(){
   const [notices, setNotices] = useState(NOTICES)
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState(initForm)
-
   const priorityColor: Record<string, string> = {
     urgent: 'danger', high: 'warning', medium: 'info', low: 'gray'
   }
-
-  const handleAdd = () => {
+  const handleAdd = () =>{
     setNotices([{ ...form, id: Date.now(), date: new Date().toISOString().split('T')[0] }, ...notices])
     setForm(initForm)
     setModal(false)
   }
-
   return (
     <AppLayout title="Notices & Announcements" subtitle="Post and manage school notices">
       <div className="toolbar">
         <div style={{ flex: 1 }} />
         <button className="btn btn-primary" onClick={() => setModal(true)}><Plus size={16} /> New Notice</button>
       </div>
-
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {notices.map(n => (
           <div key={n.id} className="card" style={{ border: n.priority === 'urgent' ? '1.5px solid #fca5a5' : undefined }}>
