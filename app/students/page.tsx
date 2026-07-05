@@ -361,9 +361,9 @@ export default function StudentsPage(){
                    <th>Roll No</th> 
                   <th>Adm No</th>
                   <th>Class</th>
-                  <th>Session</th>
                   <th>Name</th>
                   <th>Phone</th>
+                  <th>Status</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
