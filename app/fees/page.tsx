@@ -8,10 +8,8 @@ const BASE   = 'https://edumanagebackend-1.onrender.com/api/v1'
 const FEES_API     = `${BASE}/fees`
 const STUDENTS_API = `${BASE}/students`
 const CLASSES_API  = `${BASE}/classes`
-
 type FeeStatus = 'paid' | 'pending' | 'overdue';
 type ModalMode = 'add' | 'edit' | 'delete' | null;
-
 interface Student {
   _id:string
   name:string

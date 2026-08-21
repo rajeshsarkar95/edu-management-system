@@ -3,9 +3,7 @@ import { useState } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import {STUDENTS} from '@/lib/data';
 import {Save,Send} from 'lucide-react';
-
 type Status = 'present' | 'absent' | 'late';
-
 export default function AttendancePage(){
   const [selectedClass, setSelectedClass] = useState('10-A');
   const [date,setDate] = useState(new Date().toISOString().split('T')[0]);
