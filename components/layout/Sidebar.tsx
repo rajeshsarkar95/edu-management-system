@@ -8,7 +8,7 @@ import {
   FileText, CreditCard, Calendar, LibraryBig,
   Bus, Trophy, Settings, LogOut, ChevronDown,
   TrendingUp, BarChart3, Sparkles, Globe,
-  UserCog, Wallet, MessageCircle
+  UserCog,Wallet,MessageCircle
 } from 'lucide-react'
 
 const WHATSAPP_NUMBER = '94579 36663'
@@ -22,7 +22,7 @@ type NavItem = {
   newBadge?: boolean
   premium?: boolean
   iconBg?: string
-  children?: { href: string; label: string; premium?: boolean }[]
+  children?: { href: string; label: string;premium?:boolean}[]
 }
 
 const NAV: { label: string; items: NavItem[] }[] = [
@@ -30,9 +30,9 @@ const NAV: { label: string; items: NavItem[] }[] = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', iconBg: '#8b6d4f' },
     { href: '/reports',   icon: BarChart3,       label: 'Reports Hub', newBadge: true, iconBg: '#3b82f6' },
   ]},
-  { label: 'PEOPLE', items: [
-    { href: '/students',   icon: Users,         label: 'Students', badge: '248', iconBg: '#2563eb' },
-    { href: '/teachers',   icon: GraduationCap, label: 'Teachers', iconBg: '#2563eb' },
+  { label: 'PEOPLE', items:[
+    { href: '/students',icon: Users,label:'Students', badge: '248', iconBg: '#2563eb' },
+    { href: '/teachers',icon: GraduationCap, label: 'Teachers', iconBg: '#2563eb' },
     {
       href: '/students-admissions', icon: GraduationCap, label: 'Students & Admissions', iconBg: '#0ea5e9',
       children: [
@@ -83,7 +83,7 @@ const NAV: { label: string; items: NavItem[] }[] = [
       href: '/accounting-finance', icon: Wallet, label: 'Accounting & Finance', iconBg: '#0f766e',
       children: [
         { href: '/fees/reports', label: 'Fee Reports' },
-        { href: '/expenses', label: 'Expenses' },
+        { href: '/expenses', label: 'Expenses'},
       ]
     },
     {
@@ -169,8 +169,8 @@ export default function Sidebar() {
       <div className="sidebar-v2-logo">
         <div className="logo-icon">🏫</div>
         <div className="logo-text">
-          <h2>EduManage</h2>
-          <span>School Management</span>
+          <h2>AR Public school</h2>
+          <span>Public school</span>
         </div>
       </div>
 
