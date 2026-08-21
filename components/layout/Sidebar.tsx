@@ -8,8 +8,11 @@ import {
   FileText, CreditCard, Calendar, LibraryBig,
   Bus, Trophy, Settings, LogOut, ChevronDown,
   TrendingUp, BarChart3, Sparkles, Globe,
-  UserCog, Wallet
+  UserCog, Wallet, MessageCircle
 } from 'lucide-react'
+
+const WHATSAPP_NUMBER = '94579 36663'
+const WHATSAPP_MESSAGE = 'Hello, I have a query regarding EduManage.'
 
 type NavItem = {
   href: string
@@ -267,6 +270,15 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-v2-footer">
+        <a
+          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="whatsapp-btn"
+        >
+          <MessageCircle size={16} />
+          Chat on WhatsApp
+        </a>
         <div className="user-card">
           <div className="user-avatar">A</div>
           <div className="user-info">

@@ -911,13 +911,6 @@ select.form-control { cursor: pointer; }
 @media print {
   .dash-toolbar, .toast-stack { display: none !important; }
 }
-
-/* ==========================================================================
-   Sidebar v2 — purple gradient theme with colored icon badges
-   Scoped under .sidebar-v2 / .nav-v2-* so it never collides with the
-   older .sidebar / .nav-link classes above.
-   ========================================================================== */
-
 .sidebar-v2 {
   width: 268px;
   min-height: 100vh;
@@ -1124,6 +1117,28 @@ select.form-control { cursor: pointer; }
   padding: 14px 6px 4px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   margin-top: 12px;
+}
+
+.whatsapp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: #25d366;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.whatsapp-btn:hover {
+  background: #1fb855;
+  transform: translateY(-1px);
 }
 
 .sidebar-v2-footer .user-card {
