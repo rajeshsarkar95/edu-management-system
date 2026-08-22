@@ -67,8 +67,8 @@ export default function LoginPage(){
       <div style={styles.card}>
         <div style={styles.logoRow}>
           <div style={styles.logoIcon}>🏫</div>
-          <h1 style={styles.appTitle}>EduManage</h1>
-          <p style={styles.appSub}>School Management System</p>
+          <h1 style={styles.appTitle}>AR Public school</h1>
+          <p style={styles.appSub}>AR Public school</p>
         </div>
         <div style={styles.roleRow}>
           {(['admin', 'teacher'] as const).map((r)=>(
