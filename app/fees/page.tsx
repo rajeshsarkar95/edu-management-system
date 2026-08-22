@@ -122,7 +122,7 @@ async function apiFetch<T>(url:string,options?:RequestInit):Promise<T>{
 function getPageNumbers(current: number, total: number): (number | '…')[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
   const pages = new Set<number>([1, 2, total - 1, total, current - 1, current, current + 1])
-  const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b)
+  const sorted = Array.from(pages).filter((p) => p >= 1 && p <= total).sort((a, b) => a - b)
   const out: (number | '…')[] = []
   let prev = 0
   for (const p of sorted) {
