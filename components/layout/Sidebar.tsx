@@ -247,7 +247,6 @@ export default function Sidebar(){
                   </div>
                 )
               }
-
               return (
                 <Link
                   key={item.href}
