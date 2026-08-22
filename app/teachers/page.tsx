@@ -1,8 +1,8 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import AppLayout from '@/components/layout/AppLayout'
 import { COLORS } from '@/lib/data'
-import {Plus,Search,Edit,Trash2,X,Mail,Phone,Loader2,User,BookOpen,MapPin,Shield} from 'lucide-react'
+import {Plus,Search,Edit,Trash2,X,Mail,Phone,Loader2,User,BookOpen,MapPin,Shield,ChevronLeft,ChevronRight,ChevronsLeft,ChevronsRight} from 'lucide-react'
 
 const API_BASE = 'https://edumanagebackend-1.onrender.com/api/v1'
 
@@ -96,6 +96,185 @@ const ACADEMIC_FIELDS = [
   {label:'Experience', key:'experience',type:'text', placeholder: 'e.g. 5 years' },
 ]
 
+const PAGE_SIZE_OPTIONS = [8, 12, 24, 48]
+
+// ---- Pagination helpers ----------------------------------------------------
+
+/** Builds a compact page-number list with ellipses, e.g. [1, '…', 4, 5, 6, '…', 42] */
+const getPageNumbers = (current: number, total: number, delta = 1): (number | string)[] => {
+  if (total <= 1) return [1]
+  const range: (number | string)[] = []
+  const left = Math.max(2, current - delta)
+  const right = Math.min(total - 1, current + delta)
+
+  range.push(1)
+  if (left > 2) range.push('…')
+  for (let i = left; i <= right; i++) range.push(i)
+  if (right < total - 1) range.push('…')
+  if (total > 1) range.push(total)
+
+  return range
+}
+
+type PaginationBarProps = {
+  currentPage: number
+  totalPages: number
+  totalItems: number
+  itemsPerPage: number
+  pageSizeOptions?: number[]
+  onPageChange: (page: number) => void
+  onItemsPerPageChange: (size: number) => void
+}
+
+const PaginationBar = ({
+  currentPage, totalPages, totalItems, itemsPerPage, pageSizeOptions = PAGE_SIZE_OPTIONS,
+  onPageChange, onItemsPerPageChange,
+}: PaginationBarProps) => {
+  const [jumpValue, setJumpValue] = useState('')
+  const from = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1
+  const to = Math.min(currentPage * itemsPerPage, totalItems)
+  const pages = useMemo(() => getPageNumbers(currentPage, totalPages), [currentPage, totalPages])
+
+  const handleJump = (e: React.FormEvent) => {
+    e.preventDefault()
+    const n = Number(jumpValue)
+    if (Number.isFinite(n) && n >= 1 && n <= totalPages) {
+      onPageChange(n)
+    }
+    setJumpValue('')
+  }
+
+  const pageBtnStyle = (active: boolean): React.CSSProperties => ({
+    minWidth: 32,
+    height: 32,
+    padding: '0 8px',
+    borderRadius: 8,
+    border: active ? '1px solid #1e3a5f' : '1px solid #e2e8f0',
+    background: active ? '#1e3a5f' : '#fff',
+    color: active ? '#fff' : '#334155',
+    fontSize: 12.5,
+    fontWeight: active ? 700 : 500,
+    cursor: 'pointer',
+    transition: 'all .15s ease',
+  })
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 14,
+        padding: '18px 4px 4px',
+        borderTop: '1px solid #eef1f5',
+        marginTop: 20,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: '#64748b' }}>
+        <span>
+          Showing <strong style={{ color: '#1e293b' }}>{from}</strong>–<strong style={{ color: '#1e293b' }}>{to}</strong> of{' '}
+          <strong style={{ color: '#1e293b' }}>{totalItems}</strong> teachers
+        </span>
+        <select
+          value={itemsPerPage}
+          onChange={e => onItemsPerPageChange(Number(e.target.value))}
+          style={{
+            border: '1px solid #e2e8f0',
+            borderRadius: 8,
+            padding: '5px 8px',
+            fontSize: 12.5,
+            color: '#334155',
+            background: '#fff',
+            cursor: 'pointer',
+          }}
+          title="Cards per page"
+        >
+          {pageSizeOptions.map(n => (
+            <option key={n} value={n}>{n} / page</option>
+          ))}
+        </select>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <button
+          style={pageBtnStyle(false)}
+          disabled={currentPage === 1}
+          onClick={() => onPageChange(1)}
+          title="First page"
+        >
+          <ChevronsLeft size={14} />
+        </button>
+        <button
+          style={pageBtnStyle(false)}
+          disabled={currentPage === 1}
+          onClick={() => onPageChange(currentPage - 1)}
+          title="Previous page"
+        >
+          <ChevronLeft size={14} />
+        </button>
+
+        {pages.map((p, idx) =>
+          p === '…' ? (
+            <span key={`ellipsis-${idx}`} style={{ padding: '0 4px', color: '#94a3b8', fontSize: 12.5 }}>…</span>
+          ) : (
+            <button
+              key={p}
+              style={pageBtnStyle(p === currentPage)}
+              onClick={() => onPageChange(p as number)}
+            >
+              {p}
+            </button>
+          )
+        )}
+
+        <button
+          style={pageBtnStyle(false)}
+          disabled={currentPage === totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
+          title="Next page"
+        >
+          <ChevronRight size={14} />
+        </button>
+        <button
+          style={pageBtnStyle(false)}
+          disabled={currentPage === totalPages}
+          onClick={() => onPageChange(totalPages)}
+          title="Last page"
+        >
+          <ChevronsRight size={14} />
+        </button>
+
+        <form onSubmit={handleJump} style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
+          <input
+            value={jumpValue}
+            onChange={e => setJumpValue(e.target.value.replace(/[^\d]/g, ''))}
+            placeholder="Go to"
+            style={{
+              width: 52,
+              height: 32,
+              border: '1px solid #e2e8f0',
+              borderRadius: 8,
+              fontSize: 12.5,
+              textAlign: 'center',
+              color: '#334155',
+            }}
+          />
+          <button
+            type="submit"
+            style={{ ...pageBtnStyle(false), padding: '0 10px' }}
+            disabled={!jumpValue}
+          >
+            Go
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// -----------------------------------------------------------------------------
+
 export default function TeachersPage(){
   const [teachers, setTeachers] = useState<Teacher[]>([])
   const [search, setSearch] = useState('')
@@ -106,7 +285,11 @@ export default function TeachersPage(){
   const [saving, setSaving] = useState(false)
   const [error,setError] = useState<string | null>(null)
   const [activeTab,setActiveTab] = useState<'personal' | 'contact' | 'academic'>('personal')
-  
+
+  // ---- Pagination state ----
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(12)
+
   const fetchTeachers = useCallback(async ()=>{
     setLoading(true)
     setError(null)
@@ -127,6 +310,37 @@ export default function TeachersPage(){
     t.name.toLowerCase().includes(search.toLowerCase()) ||
     t.subject.toLowerCase().includes(search.toLowerCase())
   )
+
+  // ---- Pagination derived state ----
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
+
+  // Keep currentPage valid whenever the filtered set or page size changes
+  useEffect(() => {
+    setCurrentPage(p => Math.min(Math.max(1, p), totalPages))
+  }, [totalPages])
+
+  // Reset to page 1 whenever the search term changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search])
+
+  const paginated = useMemo(
+    () => filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
+    [filtered, currentPage, itemsPerPage]
+  )
+
+  // Extra touch: navigate pages with the left/right arrow keys when no modal is open
+  useEffect(() => {
+    if (modal) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (e.key === 'ArrowRight') setCurrentPage(p => Math.min(p + 1, totalPages))
+      if (e.key === 'ArrowLeft') setCurrentPage(p => Math.max(p - 1, 1))
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [modal, totalPages])
 
   const openAdd = () => {
     setForm(initForm)
@@ -296,64 +510,75 @@ export default function TeachersPage(){
           {search ? 'No teachers match your search.' : 'No teachers yet. Click "Add Teacher" to get started.'}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 18 }}>
-          {filtered.map((t, i) => (
-            <div key={t._id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <div style={{ height: 6, background: COLORS[i % COLORS.length] }} />
-              <div style={{ padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div className="avatar" style={{ width: 48, height: 48, fontSize: 18, background: COLORS[i % COLORS.length] }}>
-                      {t.name.split(' ').map(w => w[0]).join('').slice(0,2)}
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 18 }}>
+            {paginated.map((t, i) => (
+              <div key={t._id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                <div style={{ height: 6, background: COLORS[i % COLORS.length] }} />
+                <div style={{ padding: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div className="avatar" style={{ width: 48, height: 48, fontSize: 18, background: COLORS[i % COLORS.length] }}>
+                        {t.name.split(' ').map(w => w[0]).join('').slice(0,2)}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 14.5 }}>{t.name}</div>
+                        <div style={{ fontSize: 12.5, color: '#7c3aed', fontWeight: 600 }}>{t.subject}</div>
+                        {t.fatherName && (
+                          <div style={{ fontSize: 11.5, color: '#94a3b8' }}>S/o {t.fatherName}</div>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 14.5 }}>{t.name}</div>
-                      <div style={{ fontSize: 12.5, color: '#7c3aed', fontWeight: 600 }}>{t.subject}</div>
-                      {t.fatherName && (
-                        <div style={{ fontSize: 11.5, color: '#94a3b8' }}>S/o {t.fatherName}</div>
-                      )}
-                    </div>
+                    <span className={`badge ${t.status?.toLowerCase() === 'active' ? 'badge-success' : 'badge-warning'}`}>
+                      {t.status}
+                    </span>
                   </div>
-                  <span className={`badge ${t.status?.toLowerCase() === 'active' ? 'badge-success' : 'badge-warning'}`}>
-                    {t.status}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#64748b' }}>
-                    <Mail size={13} /> {t.email}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#64748b' }}>
-                    <Phone size={13} /> {t.phone}
-                  </div>
-                  {t.address && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#64748b' }}>
-                      <MapPin size={13} /> {t.address}
+                      <Mail size={13} /> {t.email}
                     </div>
-                  )}
-                  <div style={{ fontSize: 12.5, color: '#64748b' }}>
-                    📚 Classes: <strong style={{ color: '#1e3a5f' }}>{(t.classes ?? []).join(', ')}</strong>
-                  </div>
-                  <div style={{ fontSize: 12.5, color: '#64748b' }}>
-                    🎓 {t.qualification} · {t.experience}
-                  </div>
-                  {t.caste && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#64748b' }}>
+                      <Phone size={13} /> {t.phone}
+                    </div>
+                    {t.address && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#64748b' }}>
+                        <MapPin size={13} /> {t.address}
+                      </div>
+                    )}
                     <div style={{ fontSize: 12.5, color: '#64748b' }}>
-                      🏷️ {t.caste} · {t.religion}
+                      📚 Classes: <strong style={{ color: '#1e3a5f' }}>{(t.classes ?? []).join(', ')}</strong>
                     </div>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn btn-outline btn-sm" style={{ flex: 1 }} onClick={() => openEdit(t)}>
-                    <Edit size={13} /> Edit
-                  </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(t._id)}>
-                    <Trash2 size={13} />
-                  </button>
+                    <div style={{ fontSize: 12.5, color: '#64748b' }}>
+                      🎓 {t.qualification} · {t.experience}
+                    </div>
+                    {t.caste && (
+                      <div style={{ fontSize: 12.5, color: '#64748b' }}>
+                        🏷️ {t.caste} · {t.religion}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn btn-outline btn-sm" style={{ flex: 1 }} onClick={() => openEdit(t)}>
+                      <Edit size={13} /> Edit
+                    </button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(t._id)}>
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          <PaginationBar
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filtered.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1) }}
+          />
+        </>
       )}
       {(modal === 'add' || modal === 'edit') && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>

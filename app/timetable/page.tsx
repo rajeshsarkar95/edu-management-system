@@ -100,8 +100,6 @@ const UKG_TIMETABLE: DaySchedule = {
   Friday:    ['Prayer', 'Drawing',     'Picture Dict.','Game Activity','—',               '—'],
   Saturday:  ['Prayer', 'Hindi NB',    'English NB',   'Math NB',      'Table Book',      'Rhymes'],
 }
-
-// Class 1 timetable from image (8 slots: Prayer, P1–P4, Lunch, P5, P6)
 const CLASS1_TIMETABLE: DaySchedule = {
   Monday:    ['Prayer', 'Hindi',              'Eng',             'Math', 'EVS',   'Lunch', 'Urdu/Sanskrit', 'Con'],
   Tuesday:   ['Prayer', 'Hindi',              'Eng',             'Math', 'EVS',   'Lunch', 'Urdu/Sanskrit', 'Con'],
@@ -112,7 +110,6 @@ const CLASS1_TIMETABLE: DaySchedule = {
 }
 
 const PRIMARY_TIMETABLE = (cls: string): DaySchedule => {
-  // Class 1 both sections use the same timetable from image
   if (cls === '1-A' || cls === '1-B') return CLASS1_TIMETABLE
   return {
     Monday:    ['Prayer', 'English',  'Math',    'Hindi',   'EVS',        'Lunch', 'Drawing',    'PE'],

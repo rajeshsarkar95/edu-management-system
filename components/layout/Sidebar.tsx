@@ -104,13 +104,22 @@ const NAV: { label: string; items: NavItem[] }[] = [
       ]
     },
   ]},
-  { label: 'ADMISSIONS', items: [
+  {label: 'ADMISSIONS', items: [
     {
       href: '/school-front-office', icon: Globe, label: 'School Front Office', iconBg: '#c026d3',
       children: [
         { href: '/enquiries', label: 'Enquiries' },
         { href: '/visitors', label: 'Visitors' },
       ]
+    },
+  ]},
+  {label:'IDCARD',items:[
+    {
+      href:'/id-cards',icon:LibraryBig,label:'ID Card Generator',iconBg:'#f97316',
+      children:[
+        {href:'/idcard/generate',label:'Generate ID Card'},
+        {href:'/idcard/templates',label:'ID Card Templates'},
+      ]   
     },
   ]},
   { label: 'INSIGHTS', items: [
@@ -141,11 +150,9 @@ function PremiumBadge() {
 function NewBadge() {
   return <span className="nav-new-badge">NEW</span>
 }
-
 export default function Sidebar() {
   const path = usePathname()
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
-
   useEffect(() => {
     const toOpen: Record<string, boolean> = {}
     NAV.forEach(section => {
@@ -213,7 +220,6 @@ export default function Sidebar() {
                         }}
                       />
                     </button>
-
                     <div
                       className="nav-v2-submenu"
                       style={{

@@ -121,11 +121,9 @@ export default function CertificateForm() {
     setToast(message);
     window.setTimeout(() => setToast(null), 2500);
   }
-
   function update<K extends keyof CertificateData>(key: K, value: CertificateData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
-
   function applyTemplate(id: string) {
     setSelectedTemplateId(id);
     if (!id) return;
@@ -134,30 +132,25 @@ export default function CertificateForm() {
     setForm((prev) => ({ ...prev, ...t.data }));
     showToast(`Applied template "${t.name}"`);
   }
-
   function openSaveModal() {
     setTemplateName('');
     setSaveModalOpen(true);
   }
-
   function saveTemplate() {
     const name = templateName.trim();
     if (!name) return;
-
     const data = TEMPLATE_KEYS.reduce((acc, key) => {
       acc[key] = form[key];
       return acc;
-    }, {} as TemplateFields);
-
+    },{} as TemplateFields);
     const existing = templates.find(
       (t) => t.name.toLowerCase() === name.toLowerCase()
     );
-
-    if (existing) {
-      setTemplates((prev) =>
-        prev.map((t) =>
+    if (existing){
+      setTemplates((prev)=>
+        prev.map((t)=>
           t.id === existing.id
-            ? { ...t, data, updatedAt: new Date().toISOString() }
+            ? {...t,data,updatedAt:new Date().toISOString() }
             : t
         )
       );
@@ -182,7 +175,7 @@ export default function CertificateForm() {
     if (selectedTemplateId === id) setSelectedTemplateId('');
     if (t) showToast(`Deleted template "${t.name}"`);
   }
-
+  
   function resetForm() {
     setForm(emptyForm);
     setSelectedTemplateId('');
@@ -206,8 +199,6 @@ export default function CertificateForm() {
               Fill in the student and certificate details, or start from a saved template.
             </p>
           </div>
-
-          {/* Template controls */}
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={selectedTemplateId}
@@ -239,11 +230,7 @@ export default function CertificateForm() {
             </button>
           </div>
         </div>
-
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-          {/* -------------------------------------------------- */}
-          {/* Form column                                         */}
-          {/* -------------------------------------------------- */}
           <div className="space-y-6 lg:col-span-3">
             <Section title="Certificate Details">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -424,10 +411,6 @@ export default function CertificateForm() {
               </button>
             </div>
           </div>
-
-          {/* -------------------------------------------------- */}
-          {/* Live preview column                                 */}
-          {/* -------------------------------------------------- */}
           <div className="lg:col-span-2">
             <div className="sticky top-8">
               <p className="mb-2 text-sm font-medium text-slate-500">Live Preview</p>
@@ -436,8 +419,6 @@ export default function CertificateForm() {
           </div>
         </form>
       </div>
-
-      {/* Save-as-template modal */}
       {saveModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
           <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl">
@@ -473,8 +454,6 @@ export default function CertificateForm() {
           </div>
         </div>
       )}
-
-      {/* Toast */}
       {toast && (
         <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm text-white shadow-lg">
           {toast}
@@ -483,10 +462,6 @@ export default function CertificateForm() {
     </div>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/*  Section wrapper                                                    */
-/* ------------------------------------------------------------------ */
 
 function Section({
   title,
@@ -509,11 +484,6 @@ function Section({
     </div>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/*  Certificate preview                                                */
-/* ------------------------------------------------------------------ */
-
 function CertificatePreview({ data }: { data: CertificateData }) {
   const formatDate = (value: string) => {
     if (!value) return '__________';
@@ -521,7 +491,6 @@ function CertificatePreview({ data }: { data: CertificateData }) {
     if (Number.isNaN(d.getTime())) return value;
     return d.toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
   };
-
   return (
     <div className="rounded-xl border-[3px] border-double border-indigo-900/80 bg-[#fdfbf5] p-8 shadow-md">
       <div className="border border-indigo-900/20 p-6 text-center">

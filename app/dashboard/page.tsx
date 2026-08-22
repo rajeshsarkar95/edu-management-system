@@ -33,7 +33,6 @@ const RECENT_ACTIVITY: ActivityItem[] = [
   { icon: '📱', text:'Bulk SMS sent to Class 10 parents (PTM reminder)',time:'10:30 AM',color:'#e0f2fe'},
   { icon: '✏️', text:'Exam schedule added: Unit Test 1 – Class 10-A Math',time:'11:00 AM',color:'#ede9fe'},
 ];
-
 const QUICK_ACTIONS: QuickAction[] = [
   { href:'/attendance',label: 'Mark Attendance',icon:'✅',color:'#059669',bg:'#d1fae5'},
   { href:'/sms',label:'Send SMS',icon:'📱',color:'#0284c7',bg:'#e0f2fe'},
@@ -507,6 +506,7 @@ export default function Dashboard(){
           </div>
         </div>
       </div>
+
     </AppLayout>
   );
 }

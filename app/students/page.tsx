@@ -1,8 +1,8 @@
 'use client'
-import {useState,useEffect,useCallback} from 'react';
+import {useState,useEffect,useCallback,useMemo} from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import {COLORS} from '@/lib/data';
-import {Plus,Search,Edit,Trash2,Eye,X,Loader2,AlertCircle,RefreshCw} from 'lucide-react';
+import {Plus,Search,Edit,Trash2,Eye,X,Loader2,AlertCircle,RefreshCw,ChevronLeft,ChevronRight,ChevronsLeft,ChevronsRight} from 'lucide-react';
 
 const isObjectId = (v: string) => /^[a-f\d]{24}$/i.test(v);
 
@@ -77,6 +77,7 @@ const SESSION_OPTIONS = ['2024-25','2025-26','2026-27'];
 const BLOOD_GROUP_OPTIONS = ['A+','A-','B+','B-','AB+','AB-','O+','O-'];
 const GUARDIAN_RELATION_OPTIONS = ['Father','Mother','Guardian'];
 const STATUS_OPTIONS = ['active','inactive','transferred','graduated'] as const;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 const EMPTY_ADDRESS:Address = {street:'',city:'',state:'',pincode:''}
 
 const EMPTY_GUARDIAN:Guardian = {
@@ -178,6 +179,182 @@ const InfoCard = ({label,value}:{label: string; value: string | number | undefin
     <div style={{fontSize:13.5, fontWeight: 600 }}>{value || '—'}</div>
   </div>
 )
+
+// ---- Pagination helpers ----------------------------------------------------
+
+/** Builds a compact page-number list with ellipses, e.g. [1, '…', 4, 5, 6, '…', 42] */
+const getPageNumbers = (current: number, total: number, delta = 1): (number | string)[] => {
+  if (total <= 1) return [1]
+  const range: (number | string)[] = []
+  const left = Math.max(2, current - delta)
+  const right = Math.min(total - 1, current + delta)
+
+  range.push(1)
+  if (left > 2) range.push('…')
+  for (let i = left; i <= right; i++) range.push(i)
+  if (right < total - 1) range.push('…')
+  if (total > 1) range.push(total)
+
+  return range
+}
+
+type PaginationBarProps = {
+  currentPage: number
+  totalPages: number
+  totalItems: number
+  itemsPerPage: number
+  onPageChange: (page: number) => void
+  onItemsPerPageChange: (size: number) => void
+}
+
+const PaginationBar = ({
+  currentPage, totalPages, totalItems, itemsPerPage, onPageChange, onItemsPerPageChange,
+}: PaginationBarProps) => {
+  const [jumpValue, setJumpValue] = useState('')
+  const from = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1
+  const to = Math.min(currentPage * itemsPerPage, totalItems)
+  const pages = useMemo(() => getPageNumbers(currentPage, totalPages), [currentPage, totalPages])
+
+  const handleJump = (e: React.FormEvent) => {
+    e.preventDefault()
+    const n = Number(jumpValue)
+    if (Number.isFinite(n) && n >= 1 && n <= totalPages) {
+      onPageChange(n)
+    }
+    setJumpValue('')
+  }
+
+  const pageBtnStyle = (active: boolean): React.CSSProperties => ({
+    minWidth: 32,
+    height: 32,
+    padding: '0 8px',
+    borderRadius: 8,
+    border: active ? '1px solid #1e3a5f' : '1px solid #e2e8f0',
+    background: active ? '#1e3a5f' : '#fff',
+    color: active ? '#fff' : '#334155',
+    fontSize: 12.5,
+    fontWeight: active ? 700 : 500,
+    cursor: 'pointer',
+    transition: 'all .15s ease',
+  })
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 14,
+        padding: '16px 4px 4px',
+        borderTop: '1px solid #eef1f5',
+        marginTop: 12,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: '#64748b' }}>
+        <span>
+          Showing <strong style={{ color: '#1e293b' }}>{from}</strong>–<strong style={{ color: '#1e293b' }}>{to}</strong> of{' '}
+          <strong style={{ color: '#1e293b' }}>{totalItems}</strong>
+        </span>
+        <select
+          value={itemsPerPage}
+          onChange={e => onItemsPerPageChange(Number(e.target.value))}
+          style={{
+            border: '1px solid #e2e8f0',
+            borderRadius: 8,
+            padding: '5px 8px',
+            fontSize: 12.5,
+            color: '#334155',
+            background: '#fff',
+            cursor: 'pointer',
+          }}
+          title="Rows per page"
+        >
+          {PAGE_SIZE_OPTIONS.map(n => (
+            <option key={n} value={n}>{n} / page</option>
+          ))}
+        </select>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <button
+          style={pageBtnStyle(false)}
+          disabled={currentPage === 1}
+          onClick={() => onPageChange(1)}
+          title="First page"
+        >
+          <ChevronsLeft size={14} />
+        </button>
+        <button
+          style={pageBtnStyle(false)}
+          disabled={currentPage === 1}
+          onClick={() => onPageChange(currentPage - 1)}
+          title="Previous page"
+        >
+          <ChevronLeft size={14} />
+        </button>
+
+        {pages.map((p, idx) =>
+          p === '…' ? (
+            <span key={`ellipsis-${idx}`} style={{ padding: '0 4px', color: '#94a3b8', fontSize: 12.5 }}>…</span>
+          ) : (
+            <button
+              key={p}
+              style={pageBtnStyle(p === currentPage)}
+              onClick={() => onPageChange(p as number)}
+            >
+              {p}
+            </button>
+          )
+        )}
+
+        <button
+          style={pageBtnStyle(false)}
+          disabled={currentPage === totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
+          title="Next page"
+        >
+          <ChevronRight size={14} />
+        </button>
+        <button
+          style={pageBtnStyle(false)}
+          disabled={currentPage === totalPages}
+          onClick={() => onPageChange(totalPages)}
+          title="Last page"
+        >
+          <ChevronsRight size={14} />
+        </button>
+
+        <form onSubmit={handleJump} style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
+          <input
+            value={jumpValue}
+            onChange={e => setJumpValue(e.target.value.replace(/[^\d]/g, ''))}
+            placeholder="Go to"
+            style={{
+              width: 52,
+              height: 32,
+              border: '1px solid #e2e8f0',
+              borderRadius: 8,
+              fontSize: 12.5,
+              textAlign: 'center',
+              color: '#334155',
+            }}
+          />
+          <button
+            type="submit"
+            style={{ ...pageBtnStyle(false), padding: '0 10px' }}
+            disabled={!jumpValue}
+          >
+            Go
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// -----------------------------------------------------------------------------
+
 export default function StudentsPage(){
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<ClassOption[]>([]);
@@ -191,6 +368,10 @@ export default function StudentsPage(){
   const [modal, setModal] = useState<'add' | 'edit' | 'view' | null>(null);
   const [selected, setSelected] = useState<Student | null>(null);
   const [form, setForm] = useState<FormState>(initForm);
+
+  // ---- Pagination state ----
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const fetchStudents = useCallback(async ()=>{
     setLoading(true);
@@ -280,6 +461,37 @@ export default function StudentsPage(){
     return matchSearch && matchFee && matchStatus
   })
 
+  // ---- Pagination derived state ----
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+
+  // Keep currentPage valid whenever the filtered set or page size changes
+  useEffect(() => {
+    setCurrentPage(p => Math.min(Math.max(1, p), totalPages));
+  }, [totalPages]);
+
+  // Reset to page 1 whenever the user changes search/filters
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterFee, filterStudentStatus]);
+
+  const paginated = useMemo(
+    () => filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
+    [filtered, currentPage, itemsPerPage]
+  );
+
+  // Extra touch: navigate pages with the left/right arrow keys when no modal is open
+  useEffect(() => {
+    if (modal) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key === 'ArrowRight') setCurrentPage(p => Math.min(p + 1, totalPages));
+      if (e.key === 'ArrowLeft') setCurrentPage(p => Math.max(p - 1, 1));
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [modal, totalPages]);
+
   const openAdd = () => { setForm(initForm); setModal('add')}
   const openEdit = (s: Student) => { setSelected(s); setForm(toForm(s)); setModal('edit') }
   const openView = (s: Student) => { setSelected(s); setModal('view') }
@@ -351,87 +563,100 @@ export default function StudentsPage(){
             <span>Loading students…</span>
           </div>
         ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Student</th>
-                  <th>Pen No</th>
-                   <th>Roll No</th> 
-                  <th>Adm No</th>
-                  <th>Class</th>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Status</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((s,i) =>(
-                  <tr key={s._id}>
-                    <td style={{ color: '#94a3b8', fontSize: 12 }}>{i + 1}</td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div className="avatar" style={{ background: COLORS[i % COLORS.length] }}>
-                          {s.name.charAt(0)}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 600, fontSize: 13.5 }}>{s.name}</div>
-                          <div style={{ fontSize: 11.5, color: '#94a3b8' }}>
-                            {s.gender ?? '—'}{s.age != null ? ` · ${s.age}y` : ''}
+          <>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Student</th>
+                    <th>Pen No</th>
+                     <th>Roll No</th>
+                    <th>Adm No</th>
+                    <th>Class</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginated.map((s,i) =>(
+                    <tr key={s._id}>
+                      <td style={{ color: '#94a3b8', fontSize: 12 }}>{(currentPage - 1) * itemsPerPage + i + 1}</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div className="avatar" style={{ background: COLORS[i % COLORS.length] }}>
+                            {s.name.charAt(0)}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: 13.5 }}>{s.name}</div>
+                            <div style={{ fontSize: 11.5, color: '#94a3b8' }}>
+                              {s.gender ?? '—'}{s.age != null ? ` · ${s.age}y` : ''}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td>
-                      <code style={{ background: '#fef9c3', color: '#92400e', padding: '2px 6px', borderRadius: 4, fontSize: 12, fontWeight: 600 }}>
-                        {s.studentNumber || '—'}
-                      </code>
-                    </td>
-                    <td>
-                      <code style={{background:'#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>
-                        {s.rollNumber}
-                      </code>
-                    </td>
-                    <td>
-                      <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>
-                        {s.admissionNumber || '—'}
-                      </code>
-                    </td>
-                    <td>
-                      <span className="badge badge-info">
-                        {classLabel(s.class, classes)}{s.section ? ` · ${s.section}` : ''}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: 13 }}>{s.guardian?.name ?? '—'}</td>
-                    <td style={{ fontSize: 13 }}>{s.phone ?? '—'}</td>
-                    <td><span className={`badge badge-${feeColor(s.feeStatus)}`}>{s.feeStatus}</span></td>
-                    <td><span className={`badge badge-${statusColor(s.status)}`}>{s.status}</span></td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button className="btn btn-outline btn-sm btn-icon" onClick={() => openView(s)} title="View"><Eye size={14} /></button>
-                        <button className="btn btn-outline btn-sm btn-icon" onClick={() => openEdit(s)} title="Edit"><Edit size={14} /></button>
-                        <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDelete(s._id)} title="Delete"><Trash2 size={14} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td colSpan={11}>
-                      <div className="empty-state">
-                        <div className="empty-icon">🔍</div>
-                        <h3>No students found</h3>
-                        <p>Try adjusting your search or filters</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                      </td>
+                      <td>
+                        <code style={{ background: '#fef9c3', color: '#92400e', padding: '2px 6px', borderRadius: 4, fontSize: 12, fontWeight: 600 }}>
+                          {s.studentNumber || '—'}
+                        </code>
+                      </td>
+                      <td>
+                        <code style={{background:'#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>
+                          {s.rollNumber}
+                        </code>
+                      </td>
+                      <td>
+                        <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>
+                          {s.admissionNumber || '—'}
+                        </code>
+                      </td>
+                      <td>
+                        <span className="badge badge-info">
+                          {classLabel(s.class, classes)}{s.section ? ` · ${s.section}` : ''}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: 13 }}>{s.guardian?.name ?? '—'}</td>
+                      <td style={{ fontSize: 13 }}>{s.phone ?? '—'}</td>
+                      <td><span className={`badge badge-${feeColor(s.feeStatus)}`}>{s.feeStatus}</span></td>
+                      <td><span className={`badge badge-${statusColor(s.status)}`}>{s.status}</span></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-outline btn-sm btn-icon" onClick={() => openView(s)} title="View"><Eye size={14} /></button>
+                          <button className="btn btn-outline btn-sm btn-icon" onClick={() => openEdit(s)} title="Edit"><Edit size={14} /></button>
+                          <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDelete(s._id)} title="Delete"><Trash2 size={14} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={11}>
+                        <div className="empty-state">
+                          <div className="empty-icon">🔍</div>
+                          <h3>No students found</h3>
+                          <p>Try adjusting your search or filters</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {filtered.length > 0 && (
+              <PaginationBar
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filtered.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }}
+              />
+            )}
+          </>
         )}
       </div>
       {(modal === 'add' || modal === 'edit') && (
