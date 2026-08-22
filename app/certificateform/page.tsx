@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import AppLayout from '@/components/layout/AppLayout';
+
 interface CertificateData {
   certificateType: string;
   certificateNumber: string;
@@ -99,6 +101,7 @@ function Field({
 
 const inputClass =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-colors';
+
 export default function CertificateForm() {
   const [form, setForm] = useState<CertificateData>(emptyForm);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -175,7 +178,7 @@ export default function CertificateForm() {
     if (selectedTemplateId === id) setSelectedTemplateId('');
     if (t) showToast(`Deleted template "${t.name}"`);
   }
-  
+
   function resetForm() {
     setForm(emptyForm);
     setSelectedTemplateId('');
@@ -188,48 +191,43 @@ export default function CertificateForm() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-10">
+    <AppLayout
+      title="Certificate Generator"
+      subtitle="Fill in the student and certificate details, or start from a saved template."
+    >
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-              Certificate Generator
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Fill in the student and certificate details, or start from a saved template.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={selectedTemplateId}
-              onChange={(e) => applyTemplate(e.target.value)}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-            >
-              <option value="">Load a template…</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-            {selectedTemplateId && (
-              <button
-                type="button"
-                onClick={() => deleteTemplate(selectedTemplateId)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 shadow-sm hover:bg-slate-50"
-              >
-                Delete
-              </button>
-            )}
+        {/* Template controls — page-specific actions, title/subtitle now live in AppLayout */}
+        <div className="mb-6 flex flex-wrap items-center justify-end gap-2">
+          <select
+            value={selectedTemplateId}
+            onChange={(e) => applyTemplate(e.target.value)}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+          >
+            <option value="">Load a template…</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+          {selectedTemplateId && (
             <button
               type="button"
-              onClick={openSaveModal}
-              className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700"
+              onClick={() => deleteTemplate(selectedTemplateId)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 shadow-sm hover:bg-slate-50"
             >
-              Save as Template
+              Delete
             </button>
-          </div>
+          )}
+          <button
+            type="button"
+            onClick={openSaveModal}
+            className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700"
+          >
+            Save as Template
+          </button>
         </div>
+
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-5">
           <div className="space-y-6 lg:col-span-3">
             <Section title="Certificate Details">
@@ -459,7 +457,7 @@ export default function CertificateForm() {
           {toast}
         </div>
       )}
-    </div>
+    </AppLayout>
   );
 }
 

@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import clsx from "clsx";
+import AppLayout from "@/components/layout/AppLayout";
 import { RosterList } from "@/components/id-card/RosterList";
 import { StudentForm } from "@/components/id-card/StudentForm";
 import { SchoolInfoForm } from "@/components/id-card/SchoolInfoForm";
@@ -75,17 +76,13 @@ export default function IdCardsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ink-50">
-      <header className="no-print border-b border-ink-100 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="font-display text-lg font-semibold text-ink-900">
-              Student ID Card Studio
-            </h1>
-            <p className="text-xs text-ink-400">
-              Design, generate, and print ID cards — one at a time or in bulk.
-            </p>
-          </div>
+    <AppLayout
+      title="Student ID Card Studio"
+      subtitle="Design, generate, and print ID cards — one at a time or in bulk."
+    >
+      <div className="mx-auto max-w-7xl">
+        {/* Mode toggle — page-specific action, not part of AppLayout's topbar */}
+        <div className="no-print mb-4 flex items-center justify-end">
           <div className="flex items-center gap-1.5 rounded-lg bg-ink-100 p-1">
             {(["single", "bulk"] as Mode[]).map((m) => (
               <button
@@ -101,9 +98,7 @@ export default function IdCardsPage() {
             ))}
           </div>
         </div>
-      </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-6">
         <div className="no-print mb-4">
           <Toolbar
             templateId={templateId}
@@ -216,7 +211,7 @@ export default function IdCardsPage() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

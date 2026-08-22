@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useMemo, useState } from "react";
 import {
   Search,
   ArrowRight,
@@ -9,9 +9,9 @@ import {
   X,
   History,
   Users,
-  AlertTriangle,
   CalendarClock,
 } from "lucide-react";
+import AppLayout from "@/components/layout/AppLayout";
 
 export type PromotionStatus = "Promoted" | "Pending" | "Not Promoted";
 export type PromotionDecision = "Promote" | "Retain";
@@ -37,6 +37,7 @@ export interface PromotionRecord {
   date: string;
   status: PromotionStatus;
 }
+
 const CLASS_SEQUENCE: string[] = [
   "Nursery",
   "LKG",
@@ -86,6 +87,7 @@ const INITIAL_HISTORY: PromotionRecord[] = [
   { id: "h3", studentId: "s3", studentName: "Kabir Singh", rollNo: "STU-1044", fromClass: "Class 5", toClass: "Class 6", academicYear: "2024-2025", date: "2025-04-01", status: "Not Promoted" },
   { id: "h4", studentId: "s1", studentName: "Aarav Sharma", rollNo: "STU-1042", fromClass: "Class 5", toClass: "Class 6", academicYear: "2024-2025", date: "2025-04-01", status: "Promoted" },
 ];
+
 function StatusBadge({ status }: { status: PromotionStatus }) {
   const styles: Record<PromotionStatus, string> = {
     Promoted: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -100,6 +102,7 @@ function StatusBadge({ status }: { status: PromotionStatus }) {
     </span>
   );
 }
+
 interface PendingItem {
   student: Student;
   targetClass: string;
@@ -233,6 +236,7 @@ function PromotionDialog({
     </div>
   );
 }
+
 function PromotionHistoryTable({ history }: { history: PromotionRecord[] }) {
   const [yearFilter, setYearFilter] = useState<string>("All");
 
@@ -303,6 +307,7 @@ function PromotionHistoryTable({ history }: { history: PromotionRecord[] }) {
     </div>
   );
 }
+
 export default function StudentPromotion() {
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
   const [history, setHistory] = useState<PromotionRecord[]>(INITIAL_HISTORY);
@@ -413,17 +418,13 @@ export default function StudentPromotion() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 sm:p-8">
+    <AppLayout
+      title="Student Promotion"
+      subtitle="Promote students to the next class for a new academic year."
+    >
       <div className="mx-auto max-w-6xl space-y-6">
-        {/* Page header */}
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Student Promotion</h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Promote students to the next class for a new academic year.
-            </p>
-          </div>
-
+        {/* Academic year selector — page-specific control, title/subtitle now live in AppLayout */}
+        <div className="flex flex-wrap items-center justify-end gap-4">
           <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
             <CalendarClock className="h-4 w-4 text-slate-400" />
             <span className="font-medium text-slate-600">{academicYearFrom}</span>
@@ -578,6 +579,6 @@ export default function StudentPromotion() {
           onClose={() => setDialogOpen(false)}
         />
       )}
-    </div>
+    </AppLayout>
   );
 }

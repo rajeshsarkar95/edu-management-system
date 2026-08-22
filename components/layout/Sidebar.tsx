@@ -26,13 +26,13 @@ type NavItem = {
 }
 
 const NAV: { label: string; items: NavItem[] }[] = [
-  { label: 'MAIN', items: [
-    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', iconBg: '#8b6d4f' },
-    { href: '/reports',   icon: BarChart3,       label: 'Reports Hub', newBadge: true, iconBg: '#3b82f6' },
+  { label:'MAIN',items:[
+    { href:'/dashboard',icon:LayoutDashboard,label:'Dashboard',iconBg:'#8b6d4f'},
+    { href:'/reports',icon:BarChart3,label:'Reports Hub',newBadge:true,iconBg:'#3b82f6'},
   ]},
   { label: 'PEOPLE', items:[
-    { href: '/students',icon: Users,label:'Students', badge: '248', iconBg: '#2563eb' },
-    { href: '/teachers',icon: GraduationCap, label: 'Teachers', iconBg: '#2563eb' },
+    { href: '/students',icon: Users,label:'Students', badge: '248', iconBg: '#2563eb'},
+    { href: '/teachers',icon: GraduationCap, label: 'Teachers', iconBg: '#2563eb'},
     {
       href: '/students-admissions', icon: GraduationCap, label: 'Students & Admissions', iconBg: '#0ea5e9',
       children: [
@@ -43,8 +43,8 @@ const NAV: { label: string; items: NavItem[] }[] = [
     {
       href: '/hr-staff', icon: UserCog, label: 'HR & Staff', iconBg: '#a855f7',
       children: [
-        { href: '/teachers/', label: 'Teachers' },
-        { href: '/staff', label: 'Non-Teaching Staff' },
+        { href: '/teachers/', label:'Teachers'},
+        { href: '/staff', label:'Non-Teaching Staff'},
       ]
     },
   ]},
@@ -136,8 +136,10 @@ const NAV: { label: string; items: NavItem[] }[] = [
   { label: 'SYSTEM', items: [
     { href: '/settings', icon: Settings, label: 'System & Settings', iconBg: '#475569' },
   ]},
+  {label:'EVENT',items:[
+    {href:'/event',icon:Settings,label:'Events',iconBg:'475569'},
+  ]}
 ]
-
 function PremiumBadge() {
   return (
     <span className="nav-pro-badge">
@@ -146,11 +148,10 @@ function PremiumBadge() {
     </span>
   )
 }
-
-function NewBadge() {
+function NewBadge(){
   return <span className="nav-new-badge">NEW</span>
 }
-export default function Sidebar() {
+export default function Sidebar(){
   const path = usePathname()
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
   useEffect(() => {
@@ -265,7 +266,6 @@ export default function Sidebar() {
             })}
           </div>
         ))}
-
         <div style={{ height: 16 }} />
         <Link href="/login" className="nav-v2-link" style={{ color: '#f87171' }}>
           <span className="nav-v2-icon-badge" style={{ background: '#7f1d1d' }}>

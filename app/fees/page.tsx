@@ -1,7 +1,7 @@
 'use client'
 import {useState,useEffect,useCallback} from 'react';
 import AppLayout from '@/components/layout/AppLayout';
-import {Search,CheckCircle,X,Plus,Pencil,Trash2,AlertTriangle,Loader2} from 'lucide-react';
+import {Search,CheckCircle,X,Plus,Pencil,Trash2,AlertTriangle,Loader2,ChevronLeft,ChevronRight} from 'lucide-react';
 
 const BASE   = 'https://edumanagebackend-1.onrender.com/api/v1'
 
@@ -71,6 +71,7 @@ const EMPTY_FORM:FeeForm = {
 }
 
 const FEE_TYPES = ['tuition','exam','transport','hostel','library','sports','other']
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100]
 
 function studentName(f:FeeRecord):string{
   if (typeof f.student === 'object' && f.student !== null) return f.student.name ?? ''
@@ -111,6 +112,25 @@ async function apiFetch<T>(url:string,options?:RequestInit):Promise<T>{
   const json = await res.json()
   if (!res.ok) throw new Error(json.message || `Request failed: ${res.status}`)
   return json
+}
+
+/**
+ * Builds a compact page-number sequence with ellipsis gaps, e.g.
+ * [1, '…', 4, 5, 6, '…', 42] — always keeps first, last, and a
+ * window around the current page visible.
+ */
+function getPageNumbers(current: number, total: number): (number | '…')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages = new Set<number>([1, 2, total - 1, total, current - 1, current, current + 1])
+  const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b)
+  const out: (number | '…')[] = []
+  let prev = 0
+  for (const p of sorted) {
+    if (prev && p - prev > 1) out.push('…')
+    out.push(p)
+    prev = p
+  }
+  return out
 }
 
 const labelStyle: React.CSSProperties = {
@@ -170,6 +190,120 @@ function ModalFooter({onCancel,onConfirm,confirmLabel,confirmIcon,confirmColor,l
     </div>
   )
 }
+
+interface PaginationProps {
+  page: number
+  pageSize: number
+  total: number
+  onPageChange: (p: number) => void
+  onPageSizeChange: (n: number) => void
+}
+
+function Pagination({ page, pageSize, total, onPageChange, onPageSizeChange }: PaginationProps) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1
+  const end = Math.min(page * pageSize, total)
+
+  const pageBtnStyle = (active: boolean): React.CSSProperties => ({
+    minWidth: 30,
+    height: 30,
+    padding: '0 8px',
+    borderRadius: 7,
+    border: active ? '1px solid #1e3a5f' : '1px solid #e2e8f0',
+    background: active ? '#1e3a5f' : '#fff',
+    color: active ? '#fff' : '#334155',
+    fontSize: 12.5,
+    fontWeight: active ? 700 : 500,
+    cursor: 'pointer',
+  })
+
+  const navBtnStyle = (disabled: boolean): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 30,
+    height: 30,
+    borderRadius: 7,
+    border: '1px solid #e2e8f0',
+    background: disabled ? '#f8fafc' : '#fff',
+    color: disabled ? '#cbd5e1' : '#334155',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+  })
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 12,
+        padding: '14px 18px',
+        borderTop: '1px solid #f1f5f9',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: '#64748b' }}>
+        <span>
+          {total === 0 ? 'No records' : (
+            <>Showing <strong style={{ color: '#1e293b' }}>{start}–{end}</strong> of{' '}
+            <strong style={{ color: '#1e293b' }}>{total}</strong></>
+          )}
+        </span>
+        <span style={{ width: 1, height: 16, background: '#e2e8f0' }} />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          Rows per page
+          <select
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            style={{
+              border: '1px solid #e2e8f0',
+              borderRadius: 6,
+              padding: '3px 6px',
+              fontSize: 12.5,
+              color: '#334155',
+              background: '#fff',
+            }}
+          >
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button
+            onClick={() => onPageChange(page - 1)}
+            disabled={page === 1}
+            style={navBtnStyle(page === 1)}
+            aria-label="Previous page"
+          >
+            <ChevronLeft size={14} />
+          </button>
+          {getPageNumbers(page, totalPages).map((p, idx) =>
+            p === '…' ? (
+              <span key={`ellipsis-${idx}`} style={{ padding: '0 4px', color: '#94a3b8', fontSize: 12.5 }}>…</span>
+            ) : (
+              <button key={p} onClick={() => onPageChange(p)} style={pageBtnStyle(p === page)}>
+                {p}
+              </button>
+            )
+          )}
+          <button
+            onClick={() => onPageChange(page + 1)}
+            disabled={page === totalPages}
+            style={navBtnStyle(page === totalPages)}
+            aria-label="Next page"
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function FeesPage(){
   const [fees, setFees]         = useState<FeeRecord[]>([])
   const [students, setStudents] = useState<Student[]>([])
@@ -184,6 +318,8 @@ export default function FeesPage(){
   const [form, setForm]           = useState<FeeForm>(EMPTY_FORM)
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [page, setPage]         = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const fetchFees = useCallback(async ()=>{
     setLoading(true)
@@ -267,6 +403,11 @@ export default function FeesPage(){
 
   useEffect(() => { fetchFees()},[fetchFees])
 
+  // Any change to the search term or status filter invalidates the
+  // current page — jump back to page 1 so the user isn't stranded on
+  // an out-of-range page with zero visible rows.
+  useEffect(() => { setPage(1) }, [search, filter])
+
   const total     = fees.reduce((a, f) => a + f.totalAmount, 0)
   const collected = fees.reduce((a, f) => a + f.paidAmount,  0)
   const pending   = fees.reduce((a, f) => a + f.balanceDue,  0)
@@ -277,6 +418,15 @@ export default function FeesPage(){
     const matchFilter = filter === 'All' || f.status === filter
     return matchSearch && matchFilter
   })
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
+
+  const handlePageSizeChange = (n: number) => {
+    setPageSize(n)
+    setPage(1)
+  }
 
   const openAdd = () => {
     setForm(EMPTY_FORM)
@@ -327,6 +477,7 @@ export default function FeesPage(){
         body: JSON.stringify(payload),
       })
       setFees((prev) => [{ ...json.data, id: json.data._id }, ...prev])
+      setPage(1)
       closeModal()
     } catch (err: unknown) {
       setFormError(err instanceof Error ? err.message : 'Failed to create fee record.')
@@ -634,13 +785,13 @@ export default function FeesPage(){
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
+                {paginated.length === 0 ? (
                   <tr>
                     <td colSpan={12} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>No records found.</td>
                   </tr>
-                ) : filtered.map((f, i) => (
+                ) : paginated.map((f, i) => (
                   <tr key={f._id}>
-                    <td style={{ color: '#94a3b8' }}>{i + 1}</td>
+                    <td style={{ color: '#94a3b8' }}>{(safePage - 1) * pageSize + i + 1}</td>
                     <td style={{ fontWeight: 600 }}>{studentName(f)}</td>
                     <td><span className="badge badge-info">{className(f)}</span></td>
                     <td style={{ textTransform: 'capitalize' }}>{f.feeType}</td>
@@ -679,6 +830,15 @@ export default function FeesPage(){
             </table>
           )}
         </div>
+        {!loading && (
+          <Pagination
+            page={safePage}
+            pageSize={pageSize}
+            total={filtered.length}
+            onPageChange={setPage}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        )}
       </div>
       {modalMode && (
         <>
