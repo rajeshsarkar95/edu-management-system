@@ -571,7 +571,7 @@ export default function StudentsPage(){
                     <th>#</th>
                     <th>Student</th>
                     <th>Pen No</th>
-                     <th>Roll No</th>
+                    {/* // <th>Roll No</th> */}
                     <th>Adm No</th>
                     <th>Class</th>
                     <th>Name</th>
