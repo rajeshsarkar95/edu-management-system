@@ -215,7 +215,7 @@ const PaginationBar = ({
   const to = Math.min(currentPage * itemsPerPage, totalItems)
   const pages = useMemo(() => getPageNumbers(currentPage, totalPages), [currentPage, totalPages])
 
-  const handleJump = (e: React.FormEvent) => {
+  const handleJump = (e: React.FormEvent)=>{
     e.preventDefault()
     const n = Number(jumpValue)
     if (Number.isFinite(n) && n >= 1 && n <= totalPages) {
