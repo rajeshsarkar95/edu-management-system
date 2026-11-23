@@ -138,7 +138,7 @@ export function ReviewStep({ goTo }: { goTo: (step: number) => void }) {
               <Checkbox
                 id="declaration"
                 checked={field.value}
-                onCheckedChange={(c) => field.onChange(c === true)}
+                onChange={(e) => field.onChange(e.target.checked)}
                 aria-invalid={!!declErr}
                 className="mt-0.5"
               />

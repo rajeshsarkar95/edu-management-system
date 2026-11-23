@@ -10,23 +10,23 @@ import type { useApplicationActions } from "@/components/admission/application-a
 export function RowActions({ app, actions }: { app: Application; actions: ReturnType<typeof useApplicationActions> }) {
   return (
     <div className="flex items-center justify-end gap-1">
-      <Button asChild variant="ghost" size="icon-sm" aria-label={`View ${app.fullName}`} title="View">
-        <Link href={`/admission/${app.id}`}>
+      <Link href={`/admission/${app.id}`} title="View" aria-label={`View ${app.fullName}`}> 
+        <Button variant="ghost" size="icon">
           <Eye />
-        </Link>
-      </Button>
-      <Button asChild variant="ghost" size="icon-sm" aria-label={`Edit ${app.fullName}`} title="Edit">
-        <Link href={`/admission/${app.id}/edit`}>
+        </Button>
+      </Link>
+      <Link href={`/admission/${app.id}/edit`} title="Edit" aria-label={`Edit ${app.fullName}`}> 
+        <Button variant="ghost" size="icon">
           <Pencil />
-        </Link>
-      </Button>
+        </Button>
+      </Link>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-sm" aria-label={`More actions for ${app.fullName}`}>
+          <Button variant="ghost" size="icon" aria-label={`More actions for ${app.fullName}`}>
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent>
           {app.status === "pending" && (
             <DropdownMenuItem onSelect={() => actions.markUnderReview(app)}>
               <FileSearch /> Mark under review
@@ -39,7 +39,7 @@ export function RowActions({ app, actions }: { app: Application; actions: Return
             <XCircle className="text-destructive" /> Reject
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onSelect={() => actions.remove(app)}>
+          <DropdownMenuItem onSelect={() => actions.remove(app)} className="text-destructive">
             <Trash2 /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>

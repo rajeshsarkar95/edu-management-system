@@ -21,6 +21,7 @@ import { Pagination } from "./pagination";
 import { RowActions } from "./row-actions";
 
 type SortKey = "id" | "fullName" | "course" | "mobile" | "applicationDate" | "status";
+
 type SortDir = "asc" | "desc";
 
 const COLUMNS: { key: SortKey; label: string; className?: string }[] = [
@@ -114,8 +115,8 @@ export function ApplicationsView() {
       title="Applications"
       description="Search, review and decide on every admission application."
       actions={
-        <Button asChild>
-          <Link href="/admission/new">
+        <Button>
+          <Link href="/admission/new" style={{ display: "flex", alignItems: "center", gap: 4, color: "inherit", textDecoration: "none" }}>
             <Plus /> New Admission
           </Link>
         </Button>
@@ -149,9 +150,12 @@ export function ApplicationsView() {
             title="No applications yet"
             description="Start by creating your first admission application."
             action={
-              <Button asChild>
-                <Link href="/admission/new">New Admission</Link>
-              </Button>
+              <Link
+                href="/admission/new"
+                className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                New Admission
+              </Link>
             }
           />
         ) : filtered.length === 0 ? (

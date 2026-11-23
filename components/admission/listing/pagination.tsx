@@ -53,7 +53,7 @@ export function Pagination({
         </Select>
       </div>
       <div className="flex items-center gap-1">
-        <Button variant="outline" size="icon-sm" onClick={() => onPageChange(page - 1)} disabled={page <= 1} aria-label="Previous page">
+        <Button variant="outline" size="icon" onClick={() => onPageChange(page - 1)} disabled={page <= 1} aria-label="Previous page">
           <ChevronLeft />
         </Button>
         {pageList(page, pages).map((p, i) =>
@@ -65,7 +65,7 @@ export function Pagination({
             <Button
               key={p}
               variant={p === page ? "default" : "ghost"}
-              size="icon-sm"
+              size="icon"
               onClick={() => onPageChange(p)}
               aria-label={`Page ${p}`}
               aria-current={p === page ? "page" : undefined}
@@ -75,7 +75,7 @@ export function Pagination({
             </Button>
           ),
         )}
-        <Button variant="outline" size="icon-sm" onClick={() => onPageChange(page + 1)} disabled={page >= pages} aria-label="Next page">
+        <Button variant="outline" size="icon" onClick={() => onPageChange(page + 1)} disabled={page >= pages} aria-label="Next page">
           <ChevronRight />
         </Button>
       </div>

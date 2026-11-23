@@ -18,7 +18,7 @@ export function DocumentsStep() {
         control={control}
         name="photo"
         render={({ field }) => (
-          <FileUpload id="photo-docs" variant="photo" label="Student photograph" required hint="Passport-size" value={field.value} onChange={field.onChange} error={err("photo")} />
+          <FileUpload id="photo-docs" variant="photo" label="Student photograph" required hint="Passport-size" value={field.value} onChange={field.onChange} error={err("photo")} fieldKey={""} />
         )}
       />
       {DOCUMENT_KEYS.map((k) => (
@@ -34,8 +34,7 @@ export function DocumentsStep() {
               hint={DOCUMENT_META[k].hint}
               value={field.value}
               onChange={field.onChange}
-              error={err(k)}
-            />
+              error={err(k)} fieldKey={""}/>
           )}
         />
       ))}

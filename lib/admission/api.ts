@@ -16,7 +16,6 @@ export function assetUrl(path?: string | null) {
   if (!path) return undefined;
   return /^(https?:|data:|blob:)/.test(path) ? path : `${API_ORIGIN}${path}`;
 }
-/** Best displayable source for a stored file: uploaded URL first, then the thumbnail. */
 export function fileSrc(f?: FileMeta | null) {
   const uploadedUrl = f && "url" in f && typeof f.url === "string" ? f.url : undefined;
   return f ? assetUrl(uploadedUrl) ?? f.dataUrl : undefined;
@@ -95,7 +94,7 @@ export interface ListParams {
 
 export const admissionApi = {
   list: (p: ListParams = {}) => request<{ data: Application[]; pagination: Pagination }>(qs(p)),
-  /** Loads every page (100 per request). Fine for school-sized data; switch the list view to server-side paging if it grows into the many thousands. */
+  
   async listAll(maxPages = 50): Promise<Application[]> {
     const first = await this.list({ page: 1, limit: 100 });
     const all = [...first.data];

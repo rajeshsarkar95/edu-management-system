@@ -8,10 +8,6 @@ import type { Application } from "@/lib/admission/types";
 
 type Kind = "approve" | "reject" | "delete";
 
-/**
- * Shared approve / reject / delete / mark-under-review behaviour.
- * Render `dialogs` once on the page and call the returned handlers from buttons or menus.
- */
 export function useApplicationActions({ onDeleted }: { onDeleted?: (app: Application) => void } = {}) {
   const { setStatus, remove, restore } = useAdmissions();
   const [target, setTarget] = React.useState<{ kind: Kind; app: Application } | null>(null);

@@ -33,14 +33,11 @@ export function PersonalStep() {
               hint="Passport-size photo"
               value={field.value}
               onChange={field.onChange}
-              error={(errors.photo as { message?: string } | undefined)?.message}
-            />
+              error={(errors.photo as { message?: string; } | undefined)?.message} fieldKey={""}/>
           )}
         />
       </div>
     </div>
   );
 }
-
-// Re-export for symmetry with other steps (keeps imports tidy)
 export { Field, cn };
