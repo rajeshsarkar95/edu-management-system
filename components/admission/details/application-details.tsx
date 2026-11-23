@@ -77,7 +77,6 @@ export function ApplicationDetails() {
   return (
     <>
       <div className="no-print">{back}</div>
-
       <Card className="mb-6 gap-0 py-0">
         <div className="flex flex-col gap-5 p-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
@@ -96,7 +95,6 @@ export function ApplicationDetails() {
               </div>
             </div>
           </div>
-
           <div className="no-print flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => window.print()}>
               <Printer /> Print

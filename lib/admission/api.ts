@@ -3,7 +3,7 @@ import type { AdmissionStatus } from "./constants";
 import type { AdmissionFormValues, FileMeta } from "./schema";
 import type { Application } from "./types";
 
-export const API_URL = (process.env.NEXT_PUBLIC_ADMISSION_API_URL ?? "http://localhost:5000/api/v1/admissions").replace(/\/+$/, "");
+export const API_URL = (process.env.NEXT_PUBLIC_ADMISSION_API_URL ?? "https://edumanagebackend-1.onrender.com/api/v1/admissions").replace(/\/+$/, "");
 const API_ORIGIN = (() => {
   try {
     return new URL(API_URL).origin;
@@ -94,7 +94,7 @@ export interface ListParams {
 
 export const admissionApi = {
   list: (p: ListParams = {}) => request<{ data: Application[]; pagination: Pagination }>(qs(p)),
-  
+
   async listAll(maxPages = 50): Promise<Application[]> {
     const first = await this.list({ page: 1, limit: 100 });
     const all = [...first.data];

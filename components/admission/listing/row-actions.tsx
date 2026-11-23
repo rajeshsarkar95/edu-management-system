@@ -23,7 +23,7 @@ export function RowActions({ app, actions }: { app: Application; actions: Return
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" aria-label={`More actions for ${app.fullName}`}>
-            <MoreHorizontal />
+            <MoreHorizontal/>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
