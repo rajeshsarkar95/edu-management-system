@@ -17,7 +17,7 @@ export function useApplicationActions({ onDeleted }: { onDeleted?: (app: Applica
   const [target, setTarget] = React.useState<{ kind: Kind; app: Application } | null>(null);
   const [open, setOpen] = React.useState(false);
 
-  const ask = (kind: Kind) => (app: Application) => {
+  const ask = (kind: Kind) => (app:Application) => {
     setTarget({ kind, app });
     setOpen(true);
   };
@@ -32,14 +32,14 @@ export function useApplicationActions({ onDeleted }: { onDeleted?: (app: Applica
     const { kind, app } = target;
     if (kind === "approve") {
       setStatus(app.id, "approved", remark);
-      toast.success("Admission approved", { description: `${app.fullName} (${app.id}) has been approved.` });
+      toast.success("Admission approved", {description:`${app.fullName} (${app.id}) has been approved.` });
     } else if (kind === "reject") {
       setStatus(app.id, "rejected", remark);
       toast.error("Application rejected", { description: `${app.fullName} (${app.id}) has been rejected.` });
     } else {
       remove(app.id);
       onDeleted?.(app);
-      toast.success("Application deleted", {
+      toast.success("Application deleted",{
         description: `${app.fullName} (${app.id}) was removed.`,
         action: { label: "Undo", onClick: () => { restore(app); toast.success("Application restored"); } },
       });

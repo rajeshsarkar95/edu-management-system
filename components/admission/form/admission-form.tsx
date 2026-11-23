@@ -9,6 +9,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/admission/confirm-dialog";
+import { ApiError } from "@/lib/admission/api";
+import { pendingFiles } from "@/lib/admission/pending-files";
+import { DOCUMENT_KEYS } from "@/lib/admission/constants";
 import { admissionFormSchema, emptyFormValues, FORM_STEPS, type AdmissionFormValues } from "@/lib/admission/schema";
 import { useAdmissions } from "@/lib/admission/store";
 import { AcademicStep } from "./steps/academic-step";
@@ -60,12 +63,19 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
 
   // Restore an unfinished draft (create mode only)
   React.useEffect(() => {
+    pendingFiles.clear(); // never carry files over from a previous visit to the form
     if (mode !== "create") return;
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (raw) {
         const d = JSON.parse(raw) as Draft;
-        methods.reset({ ...emptyFormValues, ...d.values, declaration: false });
+        // File objects can't be stored in a draft, so documents must be attached again. The photo thumbnail survives.
+        const restored = { ...emptyFormValues, ...d.values, declaration: false };
+        let lostFiles = false;
+        for (const k of DOCUMENT_KEYS) if (restored[k]) { restored[k] = null; lostFiles = true; }
+        if (restored.photo && !restored.photo.dataUrl) { restored.photo = null; lostFiles = true; }
+        methods.reset(restored);
+        if (lostFiles) toast.info("Please re-attach your documents", { description: "Uploaded files aren't kept in drafts." });
         setStep(Math.min(d.step ?? 0, LAST));
         setFurthest(Math.min(d.furthest ?? 0, LAST));
         toast.info("Draft restored", { description: "We found an unfinished application and restored it." });
@@ -173,24 +183,35 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
     }
 
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 700)); // simulated network latency
     try {
-      if (mode === "edit" && applicationId) {
-        update(applicationId, parsed.data as AdmissionFormValues);
-        toast.success("Application updated", { description: applicationId });
-        router.push(`/admission/${applicationId}`);
-      } else {
-        const app = create(parsed.data as AdmissionFormValues);
+      const isEdit = mode === "edit" && applicationId;
+      const { application, failedUploads } = isEdit
+        ? await update(applicationId, parsed.data as AdmissionFormValues)
+        : await create(parsed.data as AdmissionFormValues);
+      if (!isEdit) {
         try {
           localStorage.removeItem(DRAFT_KEY);
         } catch {
           /* ignore */
         }
-        toast.success("Application submitted", { description: `${app.fullName} · ${app.id}` });
-        router.push(`/admission/${app.id}`);
       }
+      toast.success(isEdit ? "Application updated" : "Application submitted", { description: `${application.fullName} · ${application.id}` });
+      if (failedUploads.length) {
+        toast.warning("Saved, but some files didn't upload", { description: `${failedUploads.join("; ")}. Open Edit to upload them again.`, duration: 10000 });
+      }
+      router.push(`/admission/${application.id}`);
     } catch (e) {
       setSubmitting(false);
+      // Server-side validation failed: jump to the step that owns the first bad field.
+      if (e instanceof ApiError && e.fieldErrors?.length) {
+        const field = e.fieldErrors[0].field.split(".")[0];
+        const idx = FORM_STEPS.findIndex((s) => (s.fields as readonly string[]).includes(field));
+        if (idx >= 0 && idx < LAST) {
+          stepRef.current = idx;
+          setStep(idx);
+          setTimeout(() => methods.trigger(FORM_STEPS[idx].fields as unknown as (keyof AdmissionFormValues)[]), 0);
+        }
+      }
       toast.error("Submission failed", { description: e instanceof Error ? e.message : "Please try again." });
     }
   }
@@ -202,6 +223,7 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
       /* ignore */
     }
     methods.reset(emptyFormValues);
+    pendingFiles.clear();
     setStep(0);
     setFurthest(0);
     setReturnToReview(false);

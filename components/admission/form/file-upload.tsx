@@ -4,7 +4,9 @@ import * as React from "react";
 import { FileText, ImageIcon, RefreshCw, Trash2, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ACCEPTED_DOC_TYPES, ACCEPTED_IMAGE_TYPES, MAX_FILE_SIZE } from "@/lib/admission/constants";
+import { fileSrc } from "@/lib/admission/api";
 import { formatFileSize } from "@/lib/admission/format";
+import { pendingFiles } from "@/lib/admission/pending-files";
 import type { FileMeta } from "@/lib/admission/schema";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +34,8 @@ function toThumbnail(file: File, max = 320): Promise<string> {
 
 interface FileUploadProps {
   id: string;
+  /** Form field name (photo, marksheet, ...). The picked File is sent to the API under this key after submit. */
+  fieldKey: string;
   label: string;
   hint?: string;
   required?: boolean;
@@ -42,7 +46,7 @@ interface FileUploadProps {
   variant?: "photo" | "document";
 }
 
-export function FileUpload({ id, label, hint, required, value, onChange, error, variant = "document" }: FileUploadProps) {
+export function FileUpload({ id, fieldKey, label, hint, required, value, onChange, error, variant = "document" }: FileUploadProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [localError, setLocalError] = React.useState<string | null>(null);
   const [dragging, setDragging] = React.useState(false);
@@ -59,6 +63,7 @@ export function FileUpload({ id, label, hint, required, value, onChange, error, 
     try {
       const meta: FileMeta = { name: file.name, size: file.size, type: file.type };
       if (variant === "photo") meta.dataUrl = await toThumbnail(file);
+      pendingFiles.set(fieldKey, file);
       onChange(meta);
     } catch (e) {
       setLocalError(e instanceof Error ? e.message : "Upload failed.");
@@ -90,9 +95,9 @@ export function FileUpload({ id, label, hint, required, value, onChange, error, 
 
       {value ? (
         <div className="flex items-center gap-3 rounded-xl border bg-card p-3">
-          {variant === "photo" && value.dataUrl ? (
+          {variant === "photo" && fileSrc(value) ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={value.dataUrl} alt="Student photograph preview" className="size-16 rounded-xl object-cover" />
+            <img src={fileSrc(value)} alt="Student photograph preview" className="size-16 rounded-xl object-cover" />
           ) : (
             <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
               {value.type.startsWith("image/") ? <ImageIcon className="size-5" /> : <FileText className="size-5" />}
@@ -108,10 +113,11 @@ export function FileUpload({ id, label, hint, required, value, onChange, error, 
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             aria-label={`Remove ${label}`}
             onClick={() => {
+              pendingFiles.delete(fieldKey);
               onChange(null);
               setLocalError(null);
             }}

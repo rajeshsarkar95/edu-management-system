@@ -11,11 +11,11 @@ import {
   termsForCourse,
 } from "./constants";
 
-/** Metadata for an uploaded file. Only the photo carries a (resized) data URL in the demo. */
 export const fileSchema = z.object({
   name: z.string(),
   size: z.number(),
   type: z.string(),
+  url: z.string().optional(),      
   dataUrl: z.string().optional(),
 });
 export type FileMeta = z.infer<typeof fileSchema>;

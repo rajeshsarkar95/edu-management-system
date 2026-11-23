@@ -3,20 +3,15 @@
 import * as React from "react";
 import type { AdmissionStatus } from "./constants";
 import type { AdmissionFormValues } from "./schema";
-import { buildSeedApplications } from "./mock-data";
-import type { Application, TimelineEvent } from "./types";
-
-/**
- * Local-state admission store, persisted to localStorage.
- *
- * The action signatures (create / update / setStatus / remove) are intentionally
- * async-friendly so they can later be swapped for real API calls
- * without touching any component.
- */
-
-const STORAGE_KEY = "ems.admission.v1";
+import { admissionApi, ApiError } from "./api";
+import { pendingFiles } from "./pending-files";
+import type { Application } from "./types";
 
 type LoadState = "loading" | "ready" | "error";
+export interface SaveResult {
+  application: Application;
+  failedUploads: string[];
+}
 
 interface AdmissionStore {
   applications: Application[];
@@ -24,73 +19,61 @@ interface AdmissionStore {
   error: string | null;
   retry: () => void;
   getById: (id: string) => Application | undefined;
-  create: (values: AdmissionFormValues) => Application;
-  update: (id: string, values: AdmissionFormValues) => void;
-  setStatus: (id: string, status: AdmissionStatus, remark?: string) => void;
-  remove: (id: string) => void;
-  restore: (app: Application) => void;
-  resetDemoData: () => void;
+  create: (values: AdmissionFormValues) => Promise<SaveResult>;
+  update: (id: string, values: AdmissionFormValues) => Promise<SaveResult>;
+  setStatus: (id: string, status: AdmissionStatus, remark?: string) => Promise<Application>;
+  remove: (id: string) => Promise<void>;
+  restore: (app: Application) => Promise<void>;
 }
 
 const AdmissionContext = React.createContext<AdmissionStore | null>(null);
 
-const uid = () => Math.random().toString(36).slice(2, 10);
-
-function event(kind: TimelineEvent["kind"], title: string, description?: string, by = "Admissions Office"): TimelineEvent {
-  return { id: uid(), kind, title, description, at: new Date().toISOString(), by };
-}
-
-function nextId(apps: Application[]) {
-  const max = apps.reduce((m, a) => {
-    const n = Number(a.id.split("-").pop());
-    return Number.isFinite(n) && n > m ? n : m;
-  }, 1000);
-  return `APP-${new Date().getFullYear()}-${String(max + 1).padStart(4, "0")}`;
-}
+const byDateDesc = (a: Application, b: Application) => b.applicationDate.localeCompare(a.applicationDate);
 
 export function AdmissionProvider({ children }: { children: React.ReactNode }) {
   const [applications, setApplications] = React.useState<Application[]>([]);
   const [state, setState] = React.useState<LoadState>("loading");
   const [error, setError] = React.useState<string | null>(null);
   const [attempt, setAttempt] = React.useState(0);
-  const appsRef = React.useRef<Application[]>([]);
 
-  const commit = React.useCallback((next: Application[]) => {
-    appsRef.current = next;
-    setApplications(next);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // Storage full or unavailable: keep working in memory.
-    }
-  }, []);
-
-  // Initial load (simulated latency so loading states are visible and real in the UI)
   React.useEffect(() => {
+    let cancelled = false;
     setState("loading");
     setError(null);
-    const timer = window.setTimeout(() => {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (!Array.isArray(parsed)) throw new Error("Stored admission data has an unexpected format.");
-          appsRef.current = parsed as Application[];
-          setApplications(parsed as Application[]);
-        } else {
-          const seed = buildSeedApplications();
-          appsRef.current = seed;
-          setApplications(seed);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
-        }
+    admissionApi
+      .listAll()
+      .then((rows) => {
+        if (cancelled) return;
+        setApplications(rows);
         setState("ready");
-      } catch (e) {
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
         setError(e instanceof Error ? e.message : "Unable to load admission data.");
         setState("error");
-      }
-    }, 450);
-    return () => window.clearTimeout(timer);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [attempt]);
+
+  const upsert = React.useCallback((app: Application) => {
+    setApplications((prev) => [app, ...prev.filter((a) => a.id !== app.id)].sort(byDateDesc));
+  }, []);
+  const uploadPending = React.useCallback(async (app: Application): Promise<SaveResult> => {
+    let latest = app;
+    const failedUploads: string[] = [];
+    for (const [key, file] of pendingFiles.entries()) {
+      try {
+        latest = await admissionApi.uploadDocument(app.id, key, file);
+      } catch (e) {
+        failedUploads.push(`${file.name}${e instanceof ApiError ? ` (${e.message})` : ""}`);
+      }
+    }
+    pendingFiles.clear();
+    upsert(latest);
+    return { application: latest, failedUploads };
+  }, [upsert]);
 
   const value = React.useMemo<AdmissionStore>(
     () => ({
@@ -99,56 +82,25 @@ export function AdmissionProvider({ children }: { children: React.ReactNode }) {
       error,
       retry: () => setAttempt((n) => n + 1),
       getById: (id) => applications.find((a) => a.id === id),
-      create: (values) => {
-        const app: Application = {
-          ...values,
-          declaration: true,
-          id: nextId(appsRef.current),
-          applicationDate: new Date().toISOString(),
-          status: "pending",
-          timeline: [event("submitted", "Application submitted", "Application received via the admissions desk.", "Admissions Office")],
-        };
-        commit([app, ...appsRef.current]);
+      create: async (values) => uploadPending(await admissionApi.create(values)),
+      update: async (id, values) => {
+        const prev = applications.find((a) => a.id === id) as Record<string, unknown> | undefined;
+        const body = { ...values } as Record<string, unknown>;
+        for (const [key] of pendingFiles.entries()) if (prev?.[key]) body[key] = prev[key];
+        return uploadPending(await admissionApi.update(id, body as unknown as AdmissionFormValues));
+      },
+      setStatus: async (id, status, remark) => {
+        const app = await admissionApi.setStatus(id, status, remark);
+        upsert(app);
         return app;
       },
-      update: (id, values) => {
-        commit(
-          appsRef.current.map((a) =>
-            a.id === id
-              ? { ...a, ...values, declaration: true, timeline: [...a.timeline, event("updated", "Application details updated")] }
-              : a,
-          ),
-        );
+      remove: async (id) => {
+        await admissionApi.remove(id);
+        setApplications((prev) => prev.filter((a) => a.id !== id));
       },
-      setStatus: (id, status, remark) => {
-        commit(
-          appsRef.current.map((a) => {
-            if (a.id !== id) return a;
-            const decided = status === "approved" || status === "rejected";
-            const ev =
-              status === "approved"
-                ? event("approved", "Admission approved", remark || "Application approved by the admissions office.", "Admission Committee")
-                : status === "rejected"
-                  ? event("rejected", "Application rejected", remark || "Application rejected by the admissions office.", "Admission Committee")
-                  : status === "under_review"
-                    ? event("review", "Moved to review", "Forwarded to the department for evaluation.")
-                    : event("updated", "Status reset to pending");
-            return {
-              ...a,
-              status,
-              remarks: decided ? remark || a.remarks : undefined,
-              decidedAt: decided ? new Date().toISOString() : undefined,
-              timeline: [...a.timeline, ev],
-            };
-          }),
-        );
-      },
-      remove: (id) => commit(appsRef.current.filter((a) => a.id !== id)),
-      restore: (app) =>
-        commit([...appsRef.current.filter((a) => a.id !== app.id), app].sort((a, b) => b.applicationDate.localeCompare(a.applicationDate))),
-      resetDemoData: () => commit(buildSeedApplications()),
+      restore: async (app) => upsert(await admissionApi.restore(app.id)),
     }),
-    [applications, state, error, commit],
+    [applications, state, error, upsert, uploadPending],
   );
 
   return <AdmissionContext.Provider value={value}>{children}</AdmissionContext.Provider>;

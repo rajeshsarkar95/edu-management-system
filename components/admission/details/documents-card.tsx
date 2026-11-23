@@ -21,8 +21,11 @@ export function DocumentsCard({ app }: { app: Application }) {
   ];
 
   function open(label: string, file: FileMeta) {
-    if (file.dataUrl) setPreview({ label, file });
-    else toast.info("Preview isn't available in demo mode", { description: "File previews will work once uploads are connected to storage." });
+    const href = file.dataUrl;
+    if (href && file.type.startsWith("image/")) setPreview({ label, file });
+    else if (href) window.open(href, "_blank", "noopener,noreferrer");
+    else if (file.dataUrl) setPreview({ label, file });
+    else toast.info("No file attached", { description: "Only the details were saved for this document. Edit the application and upload the file again." });
   }
 
   return (

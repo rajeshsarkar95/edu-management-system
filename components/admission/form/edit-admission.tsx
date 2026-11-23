@@ -11,8 +11,11 @@ import { useAdmissions } from "@/lib/admission/store";
 import { AdmissionForm } from "./admission-form";
 import type { AdmissionFormValues } from "@/lib/admission/schema";
 
-export function EditAdmission() {
+export function EditAdmission(){
+
   const { id } = useParams<{ id: string }>();
+
+
   const { getById, state, error, retry } = useAdmissions();
 
   if (state === "loading") return <><PageHeader title="Edit Application" /><Skeleton className="h-[480px] w-full rounded-xl" /></>;
@@ -20,12 +23,13 @@ export function EditAdmission() {
 
   const app = getById(id);
   if (!app)
+
     return (
       <Card>
         <EmptyState
           title="Application not found"
           description={`There is no application with ID ${id}.`}
-          action={<Button asChild><Link href="/admission/applications">Go to applications</Link></Button>}
+          action={<Link href="/admission/applications"><Button>Go to applications</Button></Link>}
         />
       </Card>
     );
