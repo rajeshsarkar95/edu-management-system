@@ -44,11 +44,10 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
   const stepRef = React.useRef(0);
   stepRef.current = step;
 
-  // Validate only the schema for the current step so users can move forward step-by-step.
+
   const resolver = React.useCallback<Resolver<AdmissionFormValues>>(
     (values, ctx, opts) => {
       const schema = stepRef.current === LAST && mode === "create" ? admissionFormSchema : FORM_STEPS[stepRef.current].schema;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (zodResolver(schema as any) as Resolver<AdmissionFormValues>)(values, ctx, opts);
     },
     [mode],
@@ -61,15 +60,13 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
     shouldUnregister: false,
   });
 
-  // Restore an unfinished draft (create mode only)
   React.useEffect(() => {
-    pendingFiles.clear(); // never carry files over from a previous visit to the form
+    pendingFiles.clear(); 
     if (mode !== "create") return;
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (raw) {
         const d = JSON.parse(raw) as Draft;
-        // File objects can't be stored in a draft, so documents must be attached again. The photo thumbnail survives.
         const restored = { ...emptyFormValues, ...d.values, declaration: false };
         let lostFiles = false;
         for (const k of DOCUMENT_KEYS) if (restored[k]) { restored[k] = null; lostFiles = true; }

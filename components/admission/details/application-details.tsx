@@ -73,7 +73,6 @@ export function ApplicationDetails() {
       </>
     );
   }
-
   return (
     <>
       <div className="no-print">{back}</div>
