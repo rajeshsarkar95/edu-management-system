@@ -3,7 +3,11 @@ import type { AdmissionStatus } from "./constants";
 import type { AdmissionFormValues, FileMeta } from "./schema";
 import type { Application } from "./types";
 
-export const API_URL = (process.env.NEXT_PUBLIC_ADMISSION_API_URL ?? "https://edumanagebackend-1.onrender.com/api/v1/admissions").replace(/\/+$/, "");
+export const API_URL = (
+  process.env.NEXT_PUBLIC_ADMISSION_API_URL ??
+  "https://edumanagebackend-1.onrender.com/api/v1/admissions"
+).replace(/\/+$/, "");
+
 const API_ORIGIN = (() => {
   try {
     return new URL(API_URL).origin;
@@ -12,34 +16,53 @@ const API_ORIGIN = (() => {
   }
 })();
 
+// Resolve uploaded file URLs
 export function assetUrl(path?: string | null) {
   if (!path) return undefined;
-  return /^(https?:|data:|blob:)/.test(path) ? path : `${API_ORIGIN}${path}`;
-}
-export function fileSrc(f?: FileMeta | null) {
-  const uploadedUrl = f && "url" in f && typeof f.url === "string" ? f.url : undefined;
-  return f ? assetUrl(uploadedUrl) ?? f.dataUrl : undefined;
+
+  return /^(https?:|data:|blob:)/.test(path)
+    ? path
+    : `${API_ORIGIN}${path}`;
 }
 
+export function fileSrc(f?: FileMeta | null) {
+  const uploadedUrl =
+    f && "url" in f && typeof f.url === "string"
+      ? f.url
+      : undefined;
+
+  return f
+    ? assetUrl(uploadedUrl) ?? f.dataUrl
+    : undefined;
+}
+
+// API Error
 export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
-    public fieldErrors?: { field: string; message: string }[],
+    public fieldErrors?: {
+      field: string;
+      message: string;
+    }[],
   ) {
     super(message);
     this.name = "ApiError";
   }
 }
 
+// Authentication token
 function getToken(): string | null {
   try {
-    return localStorage.getItem(process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY ?? "token");
+    return localStorage.getItem(
+      process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY ?? "token"
+    );
   } catch {
     return null;
   }
 }
 
+// Pagination
 export interface Pagination {
   page: number;
   limit: number;
@@ -47,38 +70,81 @@ export interface Pagination {
   pages: number;
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+// Common API request handler
+async function request<T>(
+  path: string,
+  init: RequestInit = {}
+): Promise<T> {
   const isForm = init.body instanceof FormData;
   const token = getToken();
+
   let res: Response;
+
   try {
     res = await fetch(`${API_URL}${path}`, {
       ...init,
       headers: {
-        ...(isForm || !init.body ? {} : { "Content-Type": "application/json" }),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(isForm || !init.body
+          ? {}
+          : { "Content-Type": "application/json" }),
+
+        ...(token
+          ? { Authorization: `Bearer ${token}` }
+          : {}),
+
         ...init.headers,
       },
     });
   } catch {
-    throw new ApiError(0, `Can't reach the admissions server at ${API_ORIGIN || API_URL}. Is the backend running?`);
+    throw new ApiError(
+      0,
+      `Can't reach the admissions server at ${
+        API_ORIGIN || API_URL
+      }. Is the backend running?`
+    );
   }
+
   const json = await res.json().catch(() => ({}));
+
   if (!res.ok) {
     const first = json.errors?.[0];
-    const msg = first ? `${json.message ?? "Validation failed"}: ${first.field} – ${first.message}` : (json.message ?? `Request failed (${res.status})`);
-    throw new ApiError(res.status, res.status === 401 ? "You are not signed in. Please log in again." : msg, json.errors);
+
+    const msg = first
+      ? `${json.message ?? "Validation failed"}: ${first.field} – ${first.message}`
+      : json.message ?? `Request failed (${res.status})`;
+
+    throw new ApiError(
+      res.status,
+      res.status === 401
+        ? "You are not signed in. Please log in again."
+        : msg,
+      json.errors
+    );
   }
+
   return json as T;
 }
 
+// Query string helper
 const qs = (p: object) => {
   const u = new URLSearchParams();
-  Object.entries(p).forEach(([k, v]) => v !== undefined && v !== "" && v !== "all" && u.set(k, String(v)));
+
+  Object.entries(p).forEach(([k, v]) => {
+    if (
+      v !== undefined &&
+      v !== "" &&
+      v !== "all"
+    ) {
+      u.set(k, String(v));
+    }
+  });
+
   const s = u.toString();
+
   return s ? `?${s}` : "";
 };
 
+// List parameters
 export interface ListParams {
   q?: string;
   status?: AdmissionStatus;
@@ -86,33 +152,127 @@ export interface ListParams {
   session?: string;
   from?: string;
   to?: string;
-  sortBy?: "id" | "fullName" | "course" | "mobile" | "applicationDate" | "status";
+  sortBy?:
+    | "id"
+    | "fullName"
+    | "course"
+    | "mobile"
+    | "applicationDate"
+    | "status";
   order?: "asc" | "desc";
   page?: number;
   limit?: number;
 }
 
+// Admission API
 export const admissionApi = {
-  list: (p: ListParams = {}) => request<{ data: Application[]; pagination: Pagination }>(qs(p)),
+  // Get admissions
+  list: (p: ListParams = {}) =>
+    request<{
+      data: Application[];
+      pagination: Pagination;
+    }>(qs(p)),
 
+  // Get all admissions
   async listAll(maxPages = 50): Promise<Application[]> {
-    const first = await this.list({ page: 1, limit: 100 });
+    const first = await this.list({
+      page: 1,
+      limit: 100,
+    });
+
     const all = [...first.data];
-    for (let page = 2; page <= Math.min(first.pagination.pages, maxPages); page++) {
-      all.push(...(await this.list({ page, limit: 100 })).data);
+
+    for (
+      let page = 2;
+      page <= Math.min(first.pagination.pages, maxPages);
+      page++
+    ) {
+      const result = await this.list({
+        page,
+        limit: 100,
+      });
+
+      all.push(...result.data);
     }
+
     return all;
   },
-  get: (id: string) => request<{ data: Application }>(`/${id}`).then((r) => r.data),
-  create: (v: AdmissionFormValues) => request<{ data: Application }>("", { method: "POST", body: JSON.stringify(v) }).then((r) => r.data),
-  update: (id: string, v: AdmissionFormValues) => request<{ data: Application }>(`/${id}`, { method: "PUT", body: JSON.stringify(v) }).then((r) => r.data),
-  setStatus: (id: string, status: AdmissionStatus, remarks?: string) =>
-    request<{ data: Application }>(`/${id}/status`, { method: "PUT", body: JSON.stringify({ status, remarks }) }).then((r) => r.data),
-  remove: (id: string) => request<unknown>(`/${id}`, { method: "DELETE" }),
-  restore: (id: string) => request<{ data: Application }>(`/${id}/restore`, { method: "POST" }).then((r) => r.data),
-  uploadDocument(id: string, key: string, file: File) {
+
+  // Get admission by ID
+  get: (id: string) =>
+    request<{ data: Application }>(
+      `/${encodeURIComponent(id)}`
+    ).then((r) => r.data),
+
+  // Create admission
+  create: (v: AdmissionFormValues) =>
+    request<{ data: Application }>("", {
+      method: "POST",
+      body: JSON.stringify(v),
+    }).then((r) => r.data),
+
+  // Update admission details
+  update: (id: string, v: AdmissionFormValues) =>
+    request<{ data: Application }>(
+      `/${encodeURIComponent(id)}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(v),
+      }
+    ).then((r) => r.data),
+
+  // Approve / Reject / Change admission status
+  // IMPORTANT: Backend route uses PATCH, not PUT.
+  setStatus: (
+    id: string,
+    status: AdmissionStatus,
+    remarks?: string
+  ) =>
+    request<{ data: Application }>(
+      `/${encodeURIComponent(id)}/status`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          status,
+          remarks,
+        }),
+      }
+    ).then((r) => r.data),
+
+  // Delete admission
+  remove: (id: string) =>
+    request<unknown>(
+      `/${encodeURIComponent(id)}`,
+      {
+        method: "DELETE",
+      }
+    ),
+
+  // Restore deleted admission
+  restore: (id: string) =>
+    request<{ data: Application }>(
+      `/${encodeURIComponent(id)}/restore`,
+      {
+        method: "POST",
+      }
+    ).then((r) => r.data),
+
+  // Upload admission document
+  uploadDocument(
+    id: string,
+    key: string,
+    file: File
+  ) {
     const fd = new FormData();
+
     fd.append("file", file);
-    return request<{ data: Application }>(`/${id}/documents/${key}`, { method: "POST", body: fd }).then((r) => r.data);
+
+    return request<{ data: Application }>(
+      `/${encodeURIComponent(id)}/documents/${encodeURIComponent(key)}`,
+      {
+        method: "POST",
+        body: fd,
+      }
+    ).then((r) => r.data);
   },
 };

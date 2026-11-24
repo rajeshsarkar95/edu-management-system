@@ -54,7 +54,7 @@ const phone = (label: string) =>
       .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number")
   );
 
-const personName = (label: string) =>
+const personName = (label:string) =>
   z.preprocess(
     (value) => value ?? "",
     z.string()
@@ -78,15 +78,11 @@ const requiredEnum = <T extends readonly [string, ...string[]]>(
 
 const MIN_AGE = 14;
 const MAX_AGE = 60;
-
 function ageFrom(dob: string) {
   const date = new Date(`${dob}T00:00:00`);
   const now = new Date();
-
   let age = now.getFullYear() - date.getFullYear();
-
   const monthDifference = now.getMonth() - date.getMonth();
-
   if (
     monthDifference < 0 ||
     (monthDifference === 0 && now.getDate() < date.getDate())
@@ -97,36 +93,54 @@ function ageFrom(dob: string) {
   return age;
 }
 
+
 const dobSchema = z.preprocess(
   (value) => value ?? "",
   z.string()
+    .trim()
     .min(1, "Date of birth is required")
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid date")
+    .regex(
+      /^\d{4}-\d{2}-\d{2}$/,
+      "Enter a valid date"
+    )
     .refine((value) => {
-      const date = new Date(`${value}T00:00:00`);
+      const [year, month, day] = value.split("-").map(Number);
+
+      const date = new Date(year, month - 1, day);
 
       return (
-        !Number.isNaN(date.getTime()) &&
-        date.toISOString().slice(0, 10) === value
+        date.getFullYear() === year &&
+        date.getMonth() === month - 1 &&
+        date.getDate() === day
       );
     }, "Enter a valid date")
     .refine(
-      (value) => value === "" || ageFrom(value) >= MIN_AGE,
+      (value) => ageFrom(value) >= MIN_AGE,
       `Student must be at least ${MIN_AGE} years old`
     )
     .refine(
-      (value) => value === "" || ageFrom(value) <= MAX_AGE,
+      (value) => ageFrom(value) <= MAX_AGE,
       `Student age cannot exceed ${MAX_AGE} years`
     )
     .refine(
-      (value) => value === "" || new Date(`${value}T00:00:00`) <= new Date(),
+      (value) => {
+        const [year, month, day] = value.split("-").map(Number);
+        const dob = new Date(year, month - 1, day);
+        const today = new Date();
+
+        today.setHours(0, 0, 0, 0);
+
+        return dob <= today;
+      },
       "Date of birth cannot be in the future"
     )
 );
 
+
 /* =========================================
    PERSONAL INFORMATION
 ========================================= */
+
 
 export const personalSchema = z.object({
   fullName: personName("Full name"),
@@ -146,10 +160,21 @@ export const personalSchema = z.object({
       .email("Enter a valid email address")
   ),
 
-  mobile: phone("Mobile number"),
+  mobile: z
+    .string()
+    .trim()
+    .min(1, "Mobile number is required")
+    .regex(
+      /^[6-9]\d{9}$/,
+      "Enter a valid 10-digit Indian mobile number"
+    ),
 
   photo: requiredFile("Student photograph is required"),
 });
+
+
+
+
 
 export const parentSchema = z.object({
   fatherName: personName("Father's name"),
