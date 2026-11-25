@@ -29,9 +29,9 @@ const NAV: { label: string; items: NavItem[] }[] = [
   { label:'MAIN',items:[
     { href:'/dashboard',icon:LayoutDashboard,label:'Dashboard',iconBg:'#8b6d4f'},
     { href:'/reports',icon:BarChart3,label:'Reports Hub',newBadge:true,iconBg:'#3b82f6'},
-    {href:'/admission',icon:BarChart3,label:"admission",newBadge:true,iconBg:"3b82f6"}
+    {href:'/admission',icon:GraduationCap,label:"admission",newBadge:true,iconBg:"#3b82f6"}
   ]},
-  { label: 'PEOPLE', items:[
+  { label:'PEOPLE',items:[
     { href: '/students',icon: Users,label:'Students', badge: '248', iconBg: '#2563eb'},
     { href: '/teachers',icon: GraduationCap, label: 'Teachers', iconBg: '#2563eb'},
     {

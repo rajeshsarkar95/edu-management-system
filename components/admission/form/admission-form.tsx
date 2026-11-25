@@ -78,20 +78,15 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
         toast.info("Draft restored", { description: "We found an unfinished application and restored it." });
       }
     } catch {
-      /* ignore corrupt draft */
     }
     setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Autosave draft
   React.useEffect(() => {
     if (mode !== "create" || !hydrated) return;
     const sub = methods.watch((values) => {
       try {
         localStorage.setItem(DRAFT_KEY, JSON.stringify({ values: values as AdmissionFormValues, step: stepRef.current, furthest } satisfies Draft));
       } catch {
-        /* storage full */
       }
     });
     return () => sub.unsubscribe();
@@ -101,16 +96,16 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
     if (mode !== "create" || !hydrated) return;
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
-      if (raw) {
+      if (raw){
         const d = JSON.parse(raw) as Draft;
-        localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...d, step, furthest }));
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...d,step,furthest}));
       }
     } catch {
-      /* ignore */
     }
   }, [step, furthest, mode, hydrated]);
 
   const topRef = React.useRef<HTMLDivElement>(null);
+
   const move = (to: number) => {
     stepRef.current = to;
     setStep(to);
@@ -146,7 +141,6 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
 
   async function jumpTo(i: number) {
     if (i === step) return;
-    // Going backwards is always allowed; going forwards requires the current step to be valid.
     if (i > step && !(await validateCurrent())) return;
     setReturnToReview(false);
     move(i);
@@ -158,7 +152,6 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
   }
 
   async function submit() {
-    // Whole-form validation at submit time, regardless of step.
     stepRef.current = LAST;
     const parsed = admissionFormSchema.safeParse(methods.getValues());
     if (!parsed.success) {
@@ -189,7 +182,6 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
         try {
           localStorage.removeItem(DRAFT_KEY);
         } catch {
-          /* ignore */
         }
       }
       toast.success(isEdit ? "Application updated" : "Application submitted", { description: `${application.fullName} · ${application.id}` });
@@ -199,8 +191,7 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
       router.push(`/admission/${application.id}`);
     } catch (e) {
       setSubmitting(false);
-      // Server-side validation failed: jump to the step that owns the first bad field.
-      if (e instanceof ApiError && e.fieldErrors?.length) {
+      if (e instanceof ApiError && e.fieldErrors?.length){
         const field = e.fieldErrors[0].field.split(".")[0];
         const idx = FORM_STEPS.findIndex((s) => (s.fields as readonly string[]).includes(field));
         if (idx >= 0 && idx < LAST) {
@@ -217,7 +208,6 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
     try {
       localStorage.removeItem(DRAFT_KEY);
     } catch {
-      /* ignore */
     }
     methods.reset(emptyFormValues);
     pendingFiles.clear();
@@ -275,7 +265,6 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
             )}
           </CardHeader>
           <CardContent className="py-6">{body}</CardContent>
-
           <div className="flex flex-col-reverse gap-3 border-t bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <Button type="button" variant="outline" onClick={() => (step === 0 ? router.back() : back())} disabled={submitting}>
               <ArrowLeft /> {step === 0 ? "Cancel" : "Previous"}

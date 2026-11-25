@@ -1,5 +1,4 @@
 "use client";
-
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -51,20 +50,14 @@ function initialFilters(params: URLSearchParams): Filters {
   };
 }
 
-export function ApplicationsView() {
+export function ApplicationsView(){
   const params = useSearchParams();
-
   const { applications, state, error, retry } = useAdmissions();
-
   const actions = useApplicationActions();
-
   const [filters, setFilters] = React.useState<Filters>(() => initialFilters(params));
-
   const [sort, setSort] = React.useState<{ key: SortKey; dir: SortDir }>({ key: "applicationDate", dir: "desc" });
-  
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
-
   const paramString = params.toString();
   const first = React.useRef(true);
   React.useEffect(() => {
@@ -167,10 +160,10 @@ export function ApplicationsView() {
           />
         ) : (
           <>
-            {/* Desktop table */}
             <div className="hidden md:block">
               <Table>
                 <TableHeader>
+
                   <TableRow className="hover:bg-transparent">
                     {COLUMNS.map((c) => {
                       const active = sort.key === c.key;
@@ -191,6 +184,7 @@ export function ApplicationsView() {
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
+
                 <TableBody>
                   {rows.map((a) => (
                     <TableRow key={a.id}>
@@ -215,6 +209,7 @@ export function ApplicationsView() {
                 </TableBody>
               </Table>
             </div>
+            
             <ul className="divide-y md:hidden">
               {rows.map((a) => (
                 <li key={a.id} className="space-y-3 p-4">
@@ -236,7 +231,7 @@ export function ApplicationsView() {
                     <dt className="text-muted-foreground">Applied</dt>
                     <dd className="text-right">{formatDate(a.applicationDate)}</dd>
                   </dl>
-                  <RowActions app={a} actions={actions} />
+                  <RowActions app={a} actions={actions}/>
                 </li>
               ))}
             </ul>
