@@ -44,7 +44,6 @@ export function AdmissionForm({ mode, applicationId, defaults }: { mode: "create
   const stepRef = React.useRef(0);
   stepRef.current = step;
 
-
   const resolver = React.useCallback<Resolver<AdmissionFormValues>>(
     (values, ctx, opts) => {
       const schema = stepRef.current === LAST && mode === "create" ? admissionFormSchema : FORM_STEPS[stepRef.current].schema;
