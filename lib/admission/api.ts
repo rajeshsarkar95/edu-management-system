@@ -16,7 +16,6 @@ const API_ORIGIN = (() => {
   }
 })();
 
-// Resolve uploaded file URLs
 export function assetUrl(path?: string | null) {
   if (!path) return undefined;
 
@@ -35,8 +34,6 @@ export function fileSrc(f?: FileMeta | null) {
     ? assetUrl(uploadedUrl) ?? f.dataUrl
     : undefined;
 }
-
-// API Error
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -51,7 +48,6 @@ export class ApiError extends Error {
   }
 }
 
-// Authentication token
 function getToken(): string | null {
   try {
     return localStorage.getItem(
@@ -61,16 +57,12 @@ function getToken(): string | null {
     return null;
   }
 }
-
-// Pagination
 export interface Pagination {
   page: number;
   limit: number;
   total: number;
   pages: number;
 }
-
-// Common API request handler
 async function request<T>(
   path: string,
   init: RequestInit = {}
@@ -124,8 +116,6 @@ async function request<T>(
 
   return json as T;
 }
-
-// Query string helper
 const qs = (p: object) => {
   const u = new URLSearchParams();
 
@@ -144,7 +134,6 @@ const qs = (p: object) => {
   return s ? `?${s}` : "";
 };
 
-// List parameters
 export interface ListParams {
   q?: string;
   status?: AdmissionStatus;

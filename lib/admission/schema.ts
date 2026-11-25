@@ -89,10 +89,8 @@ function ageFrom(dob: string) {
   ) {
     age--;
   }
-
   return age;
 }
-
 
 const dobSchema = z.preprocess(
   (value) => value ?? "",
@@ -135,12 +133,6 @@ const dobSchema = z.preprocess(
       "Date of birth cannot be in the future"
     )
 );
-
-
-/* =========================================
-   PERSONAL INFORMATION
-========================================= */
-
 
 export const personalSchema = z.object({
   fullName: personName("Full name"),

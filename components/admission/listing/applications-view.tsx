@@ -25,8 +25,8 @@ type SortKey = "id" | "fullName" | "course" | "mobile" | "applicationDate" | "st
 type SortDir = "asc" | "desc";
 
 const COLUMNS: { key: SortKey; label: string; className?: string }[] = [
-  { key: "id", label: "Application ID" },
-  { key: "fullName", label: "Student" },
+  { key: "id", label: "Application ID"},
+  { key: "fullName", label: "Student"},
   { key: "course", label: "Course" },
   { key: "mobile", label: "Mobile" },
   { key: "applicationDate", label: "Applied on" },
@@ -53,15 +53,18 @@ function initialFilters(params: URLSearchParams): Filters {
 
 export function ApplicationsView() {
   const params = useSearchParams();
+
   const { applications, state, error, retry } = useAdmissions();
+
   const actions = useApplicationActions();
 
   const [filters, setFilters] = React.useState<Filters>(() => initialFilters(params));
+
   const [sort, setSort] = React.useState<{ key: SortKey; dir: SortDir }>({ key: "applicationDate", dir: "desc" });
+  
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
 
-  // Header search / dashboard cards navigate here with query params while this page may already be mounted.
   const paramString = params.toString();
   const first = React.useRef(true);
   React.useEffect(() => {
@@ -132,16 +135,13 @@ export function ApplicationsView() {
       </>
     );
   }
-
   const loading = state === "loading";
   const hasFilters = JSON.stringify(filters) !== JSON.stringify(DEFAULT_FILTERS);
-
   return (
     <>
       {header}
       <Card className="gap-0 overflow-hidden py-0">
         <FilterBar filters={filters} onChange={patchFilters} onClear={clearFilters} />
-
         {loading ? (
           <TableSkeleton rows={8} />
         ) : applications.length === 0 ? (
@@ -215,8 +215,6 @@ export function ApplicationsView() {
                 </TableBody>
               </Table>
             </div>
-
-            {/* Mobile cards */}
             <ul className="divide-y md:hidden">
               {rows.map((a) => (
                 <li key={a.id} className="space-y-3 p-4">
@@ -242,7 +240,6 @@ export function ApplicationsView() {
                 </li>
               ))}
             </ul>
-
             <Pagination
               page={safePage}
               pageSize={pageSize}
