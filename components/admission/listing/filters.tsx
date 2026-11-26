@@ -1,5 +1,4 @@
 "use client";
-
 import { CalendarRange, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,12 +53,15 @@ export function FilterBar({ filters, onChange, onClear }: { filters: Filters; on
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
+
             <SelectItem value="all">All statuses</SelectItem>
-            {STATUSES.map((s) => (
+
+            {STATUSES.map((s)=>(
               <SelectItem key={s} value={s}>
                 {STATUS_META[s].label}
               </SelectItem>
             ))}
+
           </SelectContent>
         </Select>
 
@@ -76,7 +78,6 @@ export function FilterBar({ filters, onChange, onClear }: { filters: Filters; on
             ))}
           </SelectContent>
         </Select>
-
         <Select value={filters.session} onValueChange={(v) => onChange({ session: v })}>
           <SelectTrigger aria-label="Filter by academic session">
             <SelectValue placeholder="Session" />
