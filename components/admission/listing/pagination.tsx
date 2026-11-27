@@ -16,6 +16,7 @@ function pageList(current: number, total: number): (number | "…")[] {
   return pages;
 }
 
+
 export function Pagination({
   page,
   pageSize,
